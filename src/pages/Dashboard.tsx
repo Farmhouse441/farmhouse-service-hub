@@ -37,9 +37,15 @@ const Dashboard = () => {
       navigate('/auth');
     } else {
       fetchUserRole();
-      fetchTickets();
     }
   }, [user, navigate]);
+
+  // Fetch tickets when userRole changes
+  useEffect(() => {
+    if (user && userRole) {
+      fetchTickets();
+    }
+  }, [userRole]);
 
   const fetchUserRole = async () => {
     try {
@@ -47,9 +53,9 @@ const Dashboard = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching user role:', error);
         return;
       }
