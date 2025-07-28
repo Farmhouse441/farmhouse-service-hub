@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, AlertTriangle, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { PhotoUpload } from '@/components/ticket/PhotoUpload';
 import { TimeTracker } from '@/components/ticket/TimeTracker';
 import { ChecklistItem } from '@/components/ticket/ChecklistItem';
@@ -53,6 +57,7 @@ export default function HouseCleaningTicket() {
   const [formData, setFormData] = useState({
     title: 'House Turnover Cleaning',
     description: '',
+    checkoutDate: undefined as Date | undefined,
     startTime: '',
     endTime: '',
     notes: '',
@@ -60,7 +65,7 @@ export default function HouseCleaningTicket() {
     damageNotes: ''
   });
 
-  const [roomPhotos, setRoomPhotos] = useState<{ [key: string]: { before: File[], after: File[], floors: File[] } }>({});
+  const [roomPhotos, setRoomPhotos] = useState<{ [key: string]: { before: File[], after: File[] } }>({});
   const [mandatoryPhotoFiles, setMandatoryPhotoFiles] = useState<{ [key: string]: File[] }>({});
   const [wholeHousePhotos, setWholeHousePhotos] = useState<File[]>([]);
   const [checklist, setChecklist] = useState<{ [key: string]: boolean }>({});
@@ -70,7 +75,7 @@ export default function HouseCleaningTicket() {
     return null;
   }
 
-  const handleRoomPhotoChange = (room: string, type: 'before' | 'after' | 'floors', photos: File[]) => {
+  const handleRoomPhotoChange = (room: string, type: 'before' | 'after', photos: File[]) => {
     setRoomPhotos(prev => ({
       ...prev,
       [room]: {
@@ -108,10 +113,10 @@ export default function HouseCleaningTicket() {
     // Check room photos
     for (const room of rooms) {
       const photos = roomPhotos[room];
-      if (!photos?.before?.length || !photos?.after?.length || !photos?.floors?.length) {
+      if (!photos?.before?.length || !photos?.after?.length) {
         toast({
           title: "Missing room photos",
-          description: `Please add before, after, and floor photos for ${room}.`,
+          description: `Please add before and after photos for ${room}.`,
           variant: "destructive"
         });
         return false;
@@ -196,6 +201,34 @@ export default function HouseCleaningTicket() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="checkout-date">
+                  Checkout Date <span className="text-destructive">*</span>
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.checkoutDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.checkoutDate ? format(formData.checkoutDate, "PPP") : <span>Select checkout date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.checkoutDate}
+                      onSelect={(date) => setFormData(prev => ({ ...prev, checkoutDate: date }))}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="description">Additional Description</Label>
                 <Textarea
                   id="description"
@@ -224,29 +257,22 @@ export default function HouseCleaningTicket() {
               {rooms.map((room) => (
                 <div key={room} className="border rounded-lg p-4 space-y-4">
                   <h3 className="text-lg font-semibold">{room}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <PhotoUpload
-                      label="Before Photos"
-                      required
-                      photos={roomPhotos[room]?.before || []}
-                      onPhotosChange={(photos) => handleRoomPhotoChange(room, 'before', photos)}
-                      maxPhotos={5}
-                    />
-                    <PhotoUpload
-                      label="After Photos"
-                      required
-                      photos={roomPhotos[room]?.after || []}
-                      onPhotosChange={(photos) => handleRoomPhotoChange(room, 'after', photos)}
-                      maxPhotos={5}
-                    />
-                    <PhotoUpload
-                      label="Floor Photos"
-                      required
-                      photos={roomPhotos[room]?.floors || []}
-                      onPhotosChange={(photos) => handleRoomPhotoChange(room, 'floors', photos)}
-                      maxPhotos={3}
-                    />
-                  </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <PhotoUpload
+                       label="Before Photos"
+                       required
+                       photos={roomPhotos[room]?.before || []}
+                       onPhotosChange={(photos) => handleRoomPhotoChange(room, 'before', photos)}
+                       maxPhotos={5}
+                     />
+                     <PhotoUpload
+                       label="After Photos"
+                       required
+                       photos={roomPhotos[room]?.after || []}
+                       onPhotosChange={(photos) => handleRoomPhotoChange(room, 'after', photos)}
+                       maxPhotos={5}
+                     />
+                   </div>
                 </div>
               ))}
             </CardContent>
