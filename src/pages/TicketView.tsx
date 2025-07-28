@@ -22,6 +22,9 @@ interface TicketData {
   before_photos: string[];
   after_photos: string[];
   total_amount: number;
+  hourly_rate: number;
+  invoice_number: string;
+  invoice_file: string;
   admin_notes: string;
   created_at: string;
   updated_at: string;
@@ -377,6 +380,58 @@ const TicketView = () => {
                       <span>${lineItemsTotal.toFixed(2)}</span>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Financial Information */}
+            {(ticket.hourly_rate > 0 || ticket.total_amount > 0 || ticket.invoice_number || ticket.invoice_file) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Financial Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {ticket.hourly_rate > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Hourly Rate</label>
+                      <p className="text-lg font-semibold">${Number(ticket.hourly_rate).toFixed(2)}/hour</p>
+                    </div>
+                  )}
+                  
+                  {ticket.total_amount > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Total Amount Charged</label>
+                      <p className="text-2xl font-bold text-primary">${Number(ticket.total_amount).toFixed(2)}</p>
+                    </div>
+                  )}
+                  
+                  {ticket.invoice_number && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Invoice Number</label>
+                      <p className="font-mono">{ticket.invoice_number}</p>
+                    </div>
+                  )}
+                  
+                  {ticket.invoice_file && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Invoice File</label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const { data } = supabase.storage.from('invoices').getPublicUrl(ticket.invoice_file);
+                          window.open(data.publicUrl, '_blank');
+                        }}
+                        className="mt-2"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Invoice
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

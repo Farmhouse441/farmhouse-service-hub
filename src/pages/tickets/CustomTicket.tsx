@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { PhotoUpload } from '@/components/ticket/PhotoUpload';
 import { TimeTracker } from '@/components/ticket/TimeTracker';
+import { FinancialSection } from '@/components/ticket/FinancialSection';
 import { useTickets } from '@/hooks/useTickets';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,12 +32,28 @@ export default function CustomTicket() {
     staff: 1,
     notes: '',
     hasDamage: false,
-    damageNotes: ''
+    damageNotes: '',
+    hourlyRate: 0,
+    totalAmount: 0,
+    invoiceNumber: ''
   });
 
   const [beforePhotos, setBeforePhotos] = useState<File[]>([]);
   const [afterPhotos, setAfterPhotos] = useState<File[]>([]);
   const [damagePhotos, setDamagePhotos] = useState<File[]>([]);
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
+
+  // Calculate hours worked
+  const calculateHours = () => {
+    if (formData.startTime && formData.endTime) {
+      const start = new Date(`2024-01-01T${formData.startTime}`);
+      const end = new Date(`2024-01-01T${formData.endTime}`);
+      const diffMs = end.getTime() - start.getTime();
+      const baseHours = Math.max(0, diffMs / (1000 * 60 * 60));
+      return baseHours * formData.staff;
+    }
+    return 0;
+  };
 
   if (!user) {
     navigate('/auth');
@@ -83,6 +100,10 @@ export default function CustomTicket() {
       work_end_date: `${serviceDate}T${formData.endTime}:00`,
       before_photos: beforePhotos,
       after_photos: afterPhotos,
+      hourly_rate: formData.hourlyRate,
+      total_amount: formData.totalAmount,
+      invoice_number: formData.invoiceNumber,
+      invoice_file: invoiceFile,
       status: 'submitted' as const
     };
 
@@ -204,6 +225,20 @@ export default function CustomTicket() {
               />
             </CardContent>
           </Card>
+
+          {/* Financial Information */}
+          <FinancialSection
+            hourlyRate={formData.hourlyRate}
+            onHourlyRateChange={(rate) => setFormData(prev => ({ ...prev, hourlyRate: rate }))}
+            totalAmount={formData.totalAmount}
+            onTotalAmountChange={(amount) => setFormData(prev => ({ ...prev, totalAmount: amount }))}
+            invoiceNumber={formData.invoiceNumber}
+            onInvoiceNumberChange={(number) => setFormData(prev => ({ ...prev, invoiceNumber: number }))}
+            invoiceFile={invoiceFile}
+            onInvoiceFileChange={setInvoiceFile}
+            calculatedHours={calculateHours()}
+            staff={formData.staff}
+          />
 
           {/* Notes and Damage */}
           <Card>

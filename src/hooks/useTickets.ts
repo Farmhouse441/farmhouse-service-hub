@@ -10,6 +10,10 @@ export interface TicketData {
   work_end_date: string;
   before_photos?: File[];
   after_photos?: File[];
+  hourly_rate?: number;
+  total_amount?: number;
+  invoice_number?: string;
+  invoice_file?: File | null;
   status?: 'draft' | 'submitted';
 }
 
@@ -41,6 +45,23 @@ export const useTickets = () => {
     return uploadedUrls;
   };
 
+  const uploadInvoiceFile = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `invoices/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('invoices')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Error uploading invoice:', uploadError);
+      throw new Error(`Failed to upload invoice: ${file.name}`);
+    }
+
+    return filePath;
+  };
+
   const createTicket = async (ticketData: TicketData) => {
     if (!user) {
       toast({
@@ -57,6 +78,7 @@ export const useTickets = () => {
       // Upload photos if provided
       let beforePhotoUrls: string[] = [];
       let afterPhotoUrls: string[] = [];
+      let invoiceFilePath: string | null = null;
 
       if (ticketData.before_photos && ticketData.before_photos.length > 0) {
         beforePhotoUrls = await uploadPhotos(ticketData.before_photos, 'before');
@@ -64,6 +86,10 @@ export const useTickets = () => {
 
       if (ticketData.after_photos && ticketData.after_photos.length > 0) {
         afterPhotoUrls = await uploadPhotos(ticketData.after_photos, 'after');
+      }
+
+      if (ticketData.invoice_file) {
+        invoiceFilePath = await uploadInvoiceFile(ticketData.invoice_file);
       }
 
       // Create ticket record
@@ -77,6 +103,10 @@ export const useTickets = () => {
           work_end_date: ticketData.work_end_date,
           before_photos: beforePhotoUrls,
           after_photos: afterPhotoUrls,
+          hourly_rate: ticketData.hourly_rate || 0,
+          total_amount: ticketData.total_amount || 0,
+          invoice_number: ticketData.invoice_number || null,
+          invoice_file: invoiceFilePath,
           status: ticketData.status || 'draft'
         })
         .select()

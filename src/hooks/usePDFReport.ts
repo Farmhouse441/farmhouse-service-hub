@@ -9,6 +9,9 @@ interface TicketData {
   work_start_date: string;
   work_end_date: string;
   total_amount: number;
+  hourly_rate: number;
+  invoice_number: string;
+  invoice_file: string;
   before_photos: string[];
   after_photos: string[];
   admin_notes: string;
@@ -77,6 +80,8 @@ export const usePDFReport = () => {
       `Work Start Date: ${new Date(ticket.work_start_date).toLocaleDateString()}`,
       `Work End Date: ${new Date(ticket.work_end_date).toLocaleDateString()}`,
       `Total Amount: $${ticket.total_amount?.toFixed(2) || '0.00'}`,
+      `Hourly Rate: $${ticket.hourly_rate?.toFixed(2) || '0.00'}/hour`,
+      `Invoice Number: ${ticket.invoice_number || 'N/A'}`,
       `Created: ${new Date(ticket.created_at).toLocaleDateString()}`,
       `Last Updated: ${new Date(ticket.updated_at).toLocaleDateString()}`
     ];

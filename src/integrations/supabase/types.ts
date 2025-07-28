@@ -188,8 +188,10 @@ export type Database = {
           before_photos: string[] | null
           created_at: string
           description: string | null
+          hourly_rate: number | null
           id: string
           invoice_file: string | null
+          invoice_number: string | null
           status: Database["public"]["Enums"]["ticket_status"]
           title: string
           total_amount: number | null
@@ -204,8 +206,10 @@ export type Database = {
           before_photos?: string[] | null
           created_at?: string
           description?: string | null
+          hourly_rate?: number | null
           id?: string
           invoice_file?: string | null
+          invoice_number?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           title: string
           total_amount?: number | null
@@ -220,8 +224,10 @@ export type Database = {
           before_photos?: string[] | null
           created_at?: string
           description?: string | null
+          hourly_rate?: number | null
           id?: string
           invoice_file?: string | null
+          invoice_number?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           title?: string
           total_amount?: number | null
