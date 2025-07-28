@@ -14,7 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      line_items: {
+        Row: {
+          created_at: string
+          description: string
+          hourly_rate: number
+          hours: number
+          id: string
+          ticket_id: string
+          total_amount: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          hourly_rate: number
+          hours: number
+          id?: string
+          ticket_id: string
+          total_amount?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          hourly_rate?: number
+          hours?: number
+          id?: string
+          ticket_id?: string
+          total_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "line_items_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "service_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          company_name: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_tickets: {
+        Row: {
+          admin_notes: string | null
+          after_photos: string[] | null
+          before_photos: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          invoice_file: string | null
+          property_address: string
+          status: Database["public"]["Enums"]["ticket_status"]
+          title: string
+          total_amount: number | null
+          updated_at: string
+          user_id: string
+          work_end_date: string
+          work_start_date: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          after_photos?: string[] | null
+          before_photos?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          invoice_file?: string | null
+          property_address: string
+          status?: Database["public"]["Enums"]["ticket_status"]
+          title: string
+          total_amount?: number | null
+          updated_at?: string
+          user_id: string
+          work_end_date: string
+          work_start_date: string
+        }
+        Update: {
+          admin_notes?: string | null
+          after_photos?: string[] | null
+          before_photos?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          invoice_file?: string | null
+          property_address?: string
+          status?: Database["public"]["Enums"]["ticket_status"]
+          title?: string
+          total_amount?: number | null
+          updated_at?: string
+          user_id?: string
+          work_end_date?: string
+          work_start_date?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +153,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      ticket_status:
+        | "draft"
+        | "submitted"
+        | "additional_info_requested"
+        | "approved_not_paid"
+        | "approved_paid"
+        | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +286,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      ticket_status: [
+        "draft",
+        "submitted",
+        "additional_info_requested",
+        "approved_not_paid",
+        "approved_paid",
+        "declined",
+      ],
+    },
   },
 } as const
