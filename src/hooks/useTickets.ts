@@ -6,7 +6,6 @@ import { useToast } from '@/hooks/use-toast';
 export interface TicketData {
   title: string;
   description?: string;
-  property_address: string;
   work_start_date: string;
   work_end_date: string;
   before_photos?: File[];
@@ -74,7 +73,6 @@ export const useTickets = () => {
           user_id: user.id,
           title: ticketData.title,
           description: ticketData.description,
-          property_address: ticketData.property_address,
           work_start_date: ticketData.work_start_date,
           work_end_date: ticketData.work_end_date,
           before_photos: beforePhotoUrls,

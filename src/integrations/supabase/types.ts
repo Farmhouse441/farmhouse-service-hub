@@ -100,7 +100,6 @@ export type Database = {
           description: string | null
           id: string
           invoice_file: string | null
-          property_address: string
           status: Database["public"]["Enums"]["ticket_status"]
           title: string
           total_amount: number | null
@@ -117,7 +116,6 @@ export type Database = {
           description?: string | null
           id?: string
           invoice_file?: string | null
-          property_address: string
           status?: Database["public"]["Enums"]["ticket_status"]
           title: string
           total_amount?: number | null
@@ -134,7 +132,6 @@ export type Database = {
           description?: string | null
           id?: string
           invoice_file?: string | null
-          property_address?: string
           status?: Database["public"]["Enums"]["ticket_status"]
           title?: string
           total_amount?: number | null

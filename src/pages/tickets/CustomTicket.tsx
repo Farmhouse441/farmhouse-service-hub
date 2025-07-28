@@ -26,7 +26,6 @@ export default function CustomTicket() {
     title: '',
     description: '',
     serviceDate: undefined as Date | undefined,
-    propertyAddress: '',
     startTime: '',
     endTime: '',
     hoursSpent: 0,
@@ -46,7 +45,7 @@ export default function CustomTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.serviceDate || !formData.title || !formData.description || !formData.propertyAddress || !formData.startTime || !formData.endTime || !formData.notes) {
+    if (!formData.serviceDate || !formData.title || !formData.description || !formData.startTime || !formData.endTime || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -80,7 +79,6 @@ export default function CustomTicket() {
     const ticketData = {
       title: formData.title,
       description: formData.description,
-      property_address: formData.propertyAddress,
       work_start_date: `${serviceDate}T${formData.startTime}:00`,
       work_end_date: `${serviceDate}T${formData.endTime}:00`,
       before_photos: beforePhotos,
@@ -168,18 +166,6 @@ export default function CustomTicket() {
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Detailed description of the work to be performed"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="property-address">
-                  Property Address <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="property-address"
-                  value={formData.propertyAddress}
-                  onChange={(e) => setFormData(prev => ({ ...prev, propertyAddress: e.target.value }))}
-                  placeholder="Enter property address"
                   required
                 />
               </div>

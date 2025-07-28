@@ -59,7 +59,6 @@ export default function HouseCleaningTicket() {
     title: 'House Turnover Cleaning',
     description: '',
     checkoutDate: undefined as Date | undefined,
-    propertyAddress: '',
     startTime: '',
     endTime: '',
     staff: 1,
@@ -104,7 +103,7 @@ export default function HouseCleaningTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.checkoutDate || !formData.startTime || !formData.endTime || !formData.notes || !formData.propertyAddress) {
+    if (!formData.checkoutDate || !formData.startTime || !formData.endTime || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -193,7 +192,6 @@ export default function HouseCleaningTicket() {
     const ticketData = {
       title: `House Cleaning Service - ${serviceDate}`,
       description: formData.description,
-      property_address: formData.propertyAddress,
       work_start_date: `${serviceDate}T${formData.startTime}:00`,
       work_end_date: `${serviceDate}T${formData.endTime}:00`,
       before_photos: allBeforePhotos,
@@ -259,18 +257,6 @@ export default function HouseCleaningTicket() {
                     />
                   </PopoverContent>
                 </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="property-address">
-                  Property Address <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="property-address"
-                  value={formData.propertyAddress}
-                  onChange={(e) => setFormData(prev => ({ ...prev, propertyAddress: e.target.value }))}
-                  placeholder="Enter property address"
-                  required
-                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Additional Description</Label>
