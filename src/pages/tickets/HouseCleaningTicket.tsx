@@ -101,7 +101,7 @@ export default function HouseCleaningTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.startTime || !formData.endTime || !formData.notes) {
+    if (!formData.checkoutDate || !formData.startTime || !formData.endTime || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -202,7 +202,7 @@ export default function HouseCleaningTicket() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="checkout-date">
-                  Checkout Date <span className="text-destructive">*</span>
+                  Service Date <span className="text-destructive">*</span>
                 </Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -214,7 +214,7 @@ export default function HouseCleaningTicket() {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.checkoutDate ? format(formData.checkoutDate, "PPP") : <span>Select checkout date</span>}
+                      {formData.checkoutDate ? format(formData.checkoutDate, "PPP") : <span>Select service date</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">

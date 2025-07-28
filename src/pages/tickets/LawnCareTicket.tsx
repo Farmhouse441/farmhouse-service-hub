@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, AlertTriangle, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { PhotoUpload } from '@/components/ticket/PhotoUpload';
 import { TimeTracker } from '@/components/ticket/TimeTracker';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +29,7 @@ export default function LawnCareTicket() {
   const [formData, setFormData] = useState({
     title: 'Lawn Mowing & Weed Whacking',
     description: '',
+    serviceDate: undefined as Date | undefined,
     startTime: '',
     endTime: '',
     staff: 1,
@@ -54,7 +59,7 @@ export default function LawnCareTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.startTime || !formData.endTime || !formData.grassHeightBefore || !formData.notes) {
+    if (!formData.serviceDate || !formData.startTime || !formData.endTime || !formData.grassHeightBefore || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -119,6 +124,34 @@ export default function LawnCareTicket() {
               <CardTitle>Service Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="service-date">
+                  Service Date <span className="text-destructive">*</span>
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.serviceDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.serviceDate ? format(formData.serviceDate, "PPP") : <span>Select service date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.serviceDate}
+                      onSelect={(date) => setFormData(prev => ({ ...prev, serviceDate: date }))}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="grass-height">
                   Grass Height Before (inches) <span className="text-destructive">*</span>
