@@ -13,17 +13,20 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { PhotoUpload } from '@/components/ticket/PhotoUpload';
 import { TimeTracker } from '@/components/ticket/TimeTracker';
+import { useTickets } from '@/hooks/useTickets';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CustomTicket() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { createTicket, loading: creatingTicket } = useTickets();
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     serviceDate: undefined as Date | undefined,
+    propertyAddress: '',
     startTime: '',
     endTime: '',
     hoursSpent: 0,
@@ -43,7 +46,7 @@ export default function CustomTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.serviceDate || !formData.title || !formData.description || !formData.startTime || !formData.endTime || !formData.notes) {
+    if (!formData.serviceDate || !formData.title || !formData.description || !formData.propertyAddress || !formData.startTime || !formData.endTime || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -72,13 +75,24 @@ export default function CustomTicket() {
       return;
     }
 
-    // TODO: Submit to Supabase
-    toast({
-      title: "Ticket submitted",
-      description: "Your custom service ticket has been submitted successfully.",
-    });
+    const serviceDate = formData.serviceDate ? format(formData.serviceDate, 'yyyy-MM-dd') : '';
 
-    navigate('/dashboard');
+    const ticketData = {
+      title: formData.title,
+      description: formData.description,
+      property_address: formData.propertyAddress,
+      work_start_date: `${serviceDate}T${formData.startTime}:00`,
+      work_end_date: `${serviceDate}T${formData.endTime}:00`,
+      before_photos: beforePhotos,
+      after_photos: afterPhotos,
+      status: 'submitted' as const
+    };
+
+    const result = await createTicket(ticketData);
+    
+    if (result) {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -154,6 +168,18 @@ export default function CustomTicket() {
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Detailed description of the work to be performed"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="property-address">
+                  Property Address <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="property-address"
+                  value={formData.propertyAddress}
+                  onChange={(e) => setFormData(prev => ({ ...prev, propertyAddress: e.target.value }))}
+                  placeholder="Enter property address"
                   required
                 />
               </div>
@@ -245,8 +271,8 @@ export default function CustomTicket() {
 
           {/* Submit */}
           <div className="flex gap-4">
-            <Button type="submit" className="flex-1">
-              Submit Service Report
+            <Button type="submit" className="flex-1" disabled={creatingTicket}>
+              {creatingTicket ? "Creating Ticket..." : "Submit Service Report"}
             </Button>
             <Button 
               type="button" 

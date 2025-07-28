@@ -15,6 +15,7 @@ import { PhotoUpload } from '@/components/ticket/PhotoUpload';
 import { TimeTracker } from '@/components/ticket/TimeTracker';
 import { ChecklistItem } from '@/components/ticket/ChecklistItem';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 
 const rooms = [
   'Unicorn Room', 'Deer Room', 'Moose Room', 'Ram Room', 'Antelope Room',
@@ -52,11 +53,13 @@ export default function HouseCleaningTicket() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { createTicket, loading: creatingTicket } = useTickets();
 
   const [formData, setFormData] = useState({
     title: 'House Turnover Cleaning',
     description: '',
     checkoutDate: undefined as Date | undefined,
+    propertyAddress: '',
     startTime: '',
     endTime: '',
     staff: 1,
@@ -101,7 +104,7 @@ export default function HouseCleaningTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.checkoutDate || !formData.startTime || !formData.endTime || !formData.notes) {
+    if (!formData.checkoutDate || !formData.startTime || !formData.endTime || !formData.notes || !formData.propertyAddress) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -167,13 +170,42 @@ export default function HouseCleaningTicket() {
       return;
     }
 
-    // TODO: Submit to Supabase
-    toast({
-      title: "Ticket submitted",
-      description: "Your house cleaning ticket has been submitted successfully.",
+    // Collect all photos for upload
+    const allBeforePhotos: File[] = [];
+    const allAfterPhotos: File[] = [];
+
+    // Collect room photos
+    Object.entries(roomPhotos).forEach(([room, photos]) => {
+      if (photos.before) allBeforePhotos.push(...photos.before);
+      if (photos.after) allAfterPhotos.push(...photos.after);
     });
 
-    navigate('/dashboard');
+    // Collect mandatory photos
+    Object.entries(mandatoryPhotoFiles).forEach(([category, photos]) => {
+      if (photos) allAfterPhotos.push(...photos);
+    });
+
+    // Add whole house photos to after photos
+    allAfterPhotos.push(...wholeHousePhotos);
+
+    const serviceDate = formData.checkoutDate ? format(formData.checkoutDate, 'yyyy-MM-dd') : '';
+    
+    const ticketData = {
+      title: `House Cleaning Service - ${serviceDate}`,
+      description: formData.description,
+      property_address: formData.propertyAddress,
+      work_start_date: `${serviceDate}T${formData.startTime}:00`,
+      work_end_date: `${serviceDate}T${formData.endTime}:00`,
+      before_photos: allBeforePhotos,
+      after_photos: allAfterPhotos,
+      status: 'submitted' as const
+    };
+
+    const result = await createTicket(ticketData);
+    
+    if (result) {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -227,6 +259,18 @@ export default function HouseCleaningTicket() {
                     />
                   </PopoverContent>
                 </Popover>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="property-address">
+                  Property Address <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="property-address"
+                  value={formData.propertyAddress}
+                  onChange={(e) => setFormData(prev => ({ ...prev, propertyAddress: e.target.value }))}
+                  placeholder="Enter property address"
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Additional Description</Label>
@@ -318,7 +362,22 @@ export default function HouseCleaningTicket() {
             </CardContent>
           </Card>
 
-         
+          {/* Final Whole House Photos */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Final Whole House Photos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PhotoUpload
+                label="Final Photos"
+                required
+                photos={wholeHousePhotos}
+                onPhotosChange={setWholeHousePhotos}
+                maxPhotos={10}
+              />
+            </CardContent>
+          </Card>
+
           {/* Notes and Damage */}
           <Card>
             <CardHeader>
@@ -368,8 +427,8 @@ export default function HouseCleaningTicket() {
 
           {/* Submit */}
           <div className="flex gap-4">
-            <Button type="submit" className="flex-1">
-              Submit House Cleaning Report
+            <Button type="submit" className="flex-1" disabled={creatingTicket}>
+              {creatingTicket ? "Creating Ticket..." : "Submit House Cleaning Report"}
             </Button>
             <Button 
               type="button" 

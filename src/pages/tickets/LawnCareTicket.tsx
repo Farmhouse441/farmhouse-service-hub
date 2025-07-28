@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { PhotoUpload } from '@/components/ticket/PhotoUpload';
 import { TimeTracker } from '@/components/ticket/TimeTracker';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 
 const yardAreas = [
   'Front Yard',
@@ -25,11 +26,13 @@ export default function LawnCareTicket() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { createTicket, loading: creatingTicket } = useTickets();
 
   const [formData, setFormData] = useState({
     title: 'Lawn Mowing & Weed Whacking',
     description: '',
     serviceDate: undefined as Date | undefined,
+    propertyAddress: '',
     startTime: '',
     endTime: '',
     staff: 1,
@@ -59,7 +62,7 @@ export default function LawnCareTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.serviceDate || !formData.startTime || !formData.endTime || !formData.grassHeightBefore || !formData.notes) {
+    if (!formData.serviceDate || !formData.propertyAddress || !formData.startTime || !formData.endTime || !formData.grassHeightBefore || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -91,13 +94,35 @@ export default function LawnCareTicket() {
       return;
     }
 
-    // TODO: Submit to Supabase
-    toast({
-      title: "Ticket submitted",
-      description: "Your lawn care ticket has been submitted successfully.",
+    // Collect all photos
+    const allBeforePhotos: File[] = [];
+    const allAfterPhotos: File[] = [];
+
+    Object.entries(yardPhotos).forEach(([area, photos]) => {
+      if (photos.before) allBeforePhotos.push(...photos.before);
+      if (photos.after) allAfterPhotos.push(...photos.after);
     });
 
-    navigate('/dashboard');
+    allAfterPhotos.push(...hazardPhotos);
+
+    const serviceDate = formData.serviceDate ? format(formData.serviceDate, 'yyyy-MM-dd') : '';
+
+    const ticketData = {
+      title: `Lawn Care Service - ${serviceDate}`,
+      description: formData.description,
+      property_address: formData.propertyAddress,
+      work_start_date: `${serviceDate}T${formData.startTime}:00`,
+      work_end_date: `${serviceDate}T${formData.endTime}:00`,
+      before_photos: allBeforePhotos,
+      after_photos: allAfterPhotos,
+      status: 'submitted' as const
+    };
+
+    const result = await createTicket(ticketData);
+    
+    if (result) {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -151,6 +176,18 @@ export default function LawnCareTicket() {
                     />
                   </PopoverContent>
                 </Popover>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="property-address">
+                  Property Address <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="property-address"
+                  value={formData.propertyAddress}
+                  onChange={(e) => setFormData(prev => ({ ...prev, propertyAddress: e.target.value }))}
+                  placeholder="Enter property address"
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="grass-height">
@@ -283,8 +320,8 @@ export default function LawnCareTicket() {
 
           {/* Submit */}
           <div className="flex gap-4">
-            <Button type="submit" className="flex-1">
-              Submit Lawn Care Report
+            <Button type="submit" className="flex-1" disabled={creatingTicket}>
+              {creatingTicket ? "Creating Ticket..." : "Submit Lawn Care Report"}
             </Button>
             <Button 
               type="button" 
