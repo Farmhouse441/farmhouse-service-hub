@@ -13,10 +13,10 @@ import { ChecklistItem } from '@/components/ticket/ChecklistItem';
 import { useToast } from '@/hooks/use-toast';
 
 const rooms = [
-  'Bedroom 1', 'Bedroom 2', 'Bedroom 3', 'Bedroom 4', 'Bedroom 5',
-  'Bathroom 1', 'Bathroom 2', 'Bathroom 3',
-  'Kitchen', 'Living Room', 'Dining Room', 'Hallways',
-  'Basement/Bonus Room'
+  'Unicorn Room', 'Deer Room', 'Moose Room', 'Ram Room', 'Antelope Room',
+  'Unicorn Bathroom', 'Kitchen Bathroom', 'Upstairs Bathroom',
+  'Kitchen', 'Fireplace Room', 'Dining Area', 'Hallways',
+  'Beverage Bar Area', 'Bull Room', 'Stag Room'
 ];
 
 const mandatoryPhotos = [
@@ -27,11 +27,22 @@ const mandatoryPhotos = [
 ];
 
 const checklistItems = [
-  { id: 'linens', label: 'Replace linens/towels', required: true },
-  { id: 'dishwasher', label: 'Run/empty dishwasher', required: true },
-  { id: 'trash', label: 'Empty trash', required: true },
-  { id: 'windows', label: 'Lock windows/doors', required: true },
-  { id: 'thermostat', label: 'Thermostat reset', required: true }
+  { id: 'linens', label: 'Replace linens/towels (wash, change, and check for stains)', required: true },
+  { id: 'dishwasher', label: 'Run and empty dishwasher', required: true },
+  { id: 'trash', label: 'Empty all trash bins and replace liners', required: true },
+  { id: 'windows', label: 'Lock all windows and doors', required: true },
+  { id: 'fireplace', label: 'Inspect fireplace and stock firewood', required: true },
+
+  // New items:
+  { id: 'bed_sheets', label: 'Clean, change, and inspect all bed sheets for stains', required: true },
+  { id: 'paper_goods', label: 'Stock toilet paper and paper towels', required: true },
+  { id: 'supplies', label: 'Check soap, shampoo, trash bags, and other supplies', required: true },
+  { id: 'grill', label: 'Clean grill and check propane/gas level', required: true },
+  { id: 'furniture', label: 'Vacuum and clean cushions and furniture', required: true },
+  { id: 'carpets', label: 'Vacuum all carpets and rugs', required: true },
+  { id: 'window_glass', label: 'Clean interior window glass and vacuum sills', required: true },
+  { id: 'pellet_stove', label: 'Clean pellet stove and ensure pellet supply', required: true },
+  { id: 'hot_tub', label: 'Check hot tub water level and adjust chemicals', required: true }
 ];
 
 export default function HouseCleaningTicket() {
