@@ -28,7 +28,6 @@ export default function CustomTicket() {
     serviceDate: undefined as Date | undefined,
     startTime: '',
     endTime: '',
-    hoursSpent: 0,
     staff: 1,
     notes: '',
     hasDamage: false,
@@ -178,9 +177,6 @@ export default function CustomTicket() {
             endTime={formData.endTime}
             onStartTimeChange={(time) => setFormData(prev => ({ ...prev, startTime: time }))}
             onEndTimeChange={(time) => setFormData(prev => ({ ...prev, endTime: time }))}
-            hoursSpent={formData.hoursSpent}
-            onHoursChange={(hours) => setFormData(prev => ({ ...prev, hoursSpent: hours }))}
-            allowManualHours={true}
             staff={formData.staff}
             onStaffChange={(staff) => setFormData(prev => ({ ...prev, staff }))}
           />
