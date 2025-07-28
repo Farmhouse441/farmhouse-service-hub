@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, FileText, DollarSign, Camera, User, Edit, Send, Download } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ArrowLeft, Download, Edit, Send, Calendar, DollarSign, User, Building, FileText, Camera, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 import { format } from 'date-fns';
 import { usePDFReport } from '@/hooks/usePDFReport';
 
@@ -16,7 +19,7 @@ interface TicketData {
   id: string;
   title: string;
   description: string;
-  status: string;
+  status: 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined';
   work_start_date: string;
   work_end_date: string;
   before_photos: string[];
@@ -48,12 +51,14 @@ const TicketView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { canEditTicket, canDeleteTicket, loading: permissionsLoading } = usePermissions();
   const { toast } = useToast();
+  const { deleteTicket, loading: deleteLoading } = useTickets();
+  const { generatePDF } = usePDFReport();
   
   const [ticket, setTicket] = useState<TicketData | null>(null);
   const [userRole, setUserRole] = useState<string>('user');
   const [loading, setLoading] = useState(true);
-  const { generatePDF } = usePDFReport();
 
   useEffect(() => {
     if (!user) {
@@ -67,8 +72,14 @@ const TicketView = () => {
     }
 
     fetchUserRole();
-    fetchTicket();
   }, [user, id, navigate]);
+
+  // Fetch ticket when permissions are loaded
+  useEffect(() => {
+    if (!permissionsLoading && user && id) {
+      fetchTicket();
+    }
+  }, [permissionsLoading, user, id]);
 
   const fetchUserRole = async () => {
     try {
@@ -212,6 +223,21 @@ const TicketView = () => {
     }
   };
 
+  const handleDeleteTicket = async () => {
+    if (!ticket) return;
+    
+    const success = await deleteTicket(ticket.id, {
+      before_photos: ticket.before_photos || [],
+      after_photos: ticket.after_photos || [],
+      invoice_file: ticket.invoice_file,
+      status: ticket.status
+    });
+
+    if (success) {
+      navigate('/dashboard');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       draft: { label: 'Draft', variant: 'secondary' as const },
@@ -258,7 +284,7 @@ const TicketView = () => {
 
   const isAdmin = userRole === 'admin';
   const lineItemsTotal = ticket.line_items?.reduce((sum, item) => sum + Number(item.total_amount || 0), 0) || 0;
-  const canEdit = isAdmin || (ticket.user_id === user?.id && ticket.status === 'draft');
+  const canEdit = canEditTicket(ticket);
   const canSubmit = ticket.user_id === user?.id && ticket.status === 'draft';
 
   return (
@@ -291,6 +317,39 @@ const TicketView = () => {
                   <Edit className="h-4 w-4" />
                   Edit Ticket
                 </Button>
+              )}
+              {canDeleteTicket(ticket) && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      disabled={deleteLoading}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Ticket</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{ticket.title}"? 
+                        This action cannot be undone and will permanently remove the ticket and all associated files.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteTicket}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        disabled={deleteLoading}
+                      >
+                        {deleteLoading ? 'Deleting...' : 'Delete'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
               {getStatusBadge(ticket.status)}
             </div>

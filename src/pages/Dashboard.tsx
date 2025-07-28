@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,17 +9,32 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, FileText, Clock, CheckCircle, XCircle, Search, Settings, Users, Eye, Edit, Send } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Plus, FileText, Clock, CheckCircle, XCircle, Search, Settings, Users, Eye, Edit, Send, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTickets } from '@/hooks/useTickets';
 import { format } from 'date-fns';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { canEditTicket, canDeleteTicket, loading: permissionsLoading } = usePermissions();
+  const { deleteTicket, loading: deleteLoading } = useTickets();
   
-  const [tickets, setTickets] = useState([]);
+  const [tickets, setTickets] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    status: 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined';
+    created_at: string;
+    total_amount: number;
+    user_id: string;
+    before_photos?: string[];
+    after_photos?: string[];
+    invoice_file?: string | null;
+  }>>([]);
   const [userRole, setUserRole] = useState<string>('user');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -172,6 +188,30 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteTicket = async (ticket: {
+    id: string;
+    title: string;
+    description: string;
+    status: 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined';
+    created_at: string;
+    total_amount: number;
+    user_id: string;
+    before_photos?: string[];
+    after_photos?: string[];
+    invoice_file?: string | null;
+  }) => {
+    const success = await deleteTicket(ticket.id, {
+      before_photos: ticket.before_photos || [],
+      after_photos: ticket.after_photos || [],
+      invoice_file: ticket.invoice_file,
+      status: ticket.status
+    });
+
+    if (success) {
+      fetchTickets(); // Refresh the list
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -191,7 +231,7 @@ const Dashboard = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const filteredTickets = tickets.filter((ticket: any) => {
+  const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (ticket.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
@@ -373,7 +413,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTickets.map((ticket: any) => (
+                    {filteredTickets.map((ticket) => (
                       <TableRow key={ticket.id}>
                          <TableCell className="font-medium">
                            {ticket.title}
@@ -398,8 +438,8 @@ const Dashboard = () => {
                               View
                             </Button>
                             
-                            {/* Edit button - for draft tickets owned by user or admin */}
-                            {(isAdmin || (ticket.user_id === user?.id && ticket.status === 'draft')) && (
+                            {/* Edit button - using proper permission system */}
+                            {canEditTicket(ticket) && (
                               <Button 
                                 variant="outline" 
                                 size="sm" 
@@ -441,6 +481,42 @@ const Dashboard = () => {
                                   <SelectItem value="declined">Declined</SelectItem>
                                 </SelectContent>
                               </Select>
+                            )}
+                            
+                            {/* Delete button - using proper permission system */}
+                            {canDeleteTicket(ticket) && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="gap-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                    disabled={deleteLoading}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                    Delete
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Ticket</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete "{ticket.title}"? 
+                                      This action cannot be undone and will permanently remove the ticket and all associated files.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteTicket(ticket)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      disabled={deleteLoading}
+                                    >
+                                      {deleteLoading ? 'Deleting...' : 'Delete'}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             )}
                           </div>
                         </TableCell>

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Camera, Save, Send } from 'lucide-react';
+import { ArrowLeft, Save, Send, Upload, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -27,11 +28,22 @@ const EditTicket = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { canEditTicket, loading: permissionsLoading } = usePermissions();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [userRole, setUserRole] = useState<string>('user');
+  const [ticket, setTicket] = useState<{
+    id: string;
+    title: string;
+    description: string;
+    work_start_date: string;
+    work_end_date: string;
+    before_photos: string[];
+    after_photos: string[];
+    user_id: string;
+    status: string;
+  } | null>(null);
   const [formData, setFormData] = useState<TicketFormData>({
     title: '',
     description: '',
@@ -54,28 +66,11 @@ const EditTicket = () => {
       return;
     }
 
-    fetchUserRole();
-    fetchTicket();
-  }, [user, id, navigate]);
-
-  const fetchUserRole = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user?.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user role:', error);
-        return;
-      }
-      
-      setUserRole(data?.role || 'user');
-    } catch (error) {
-      console.error('Error fetching user role:', error);
+    // Wait for permissions to load before fetching ticket
+    if (!permissionsLoading) {
+      fetchTicket();
     }
-  };
+  }, [user, id, navigate, permissionsLoading]);
 
   const fetchTicket = async () => {
     try {
@@ -98,11 +93,8 @@ const EditTicket = () => {
         return;
       }
 
-      // Check permissions
-      const isAdmin = userRole === 'admin';
-      const canEdit = isAdmin || (data.user_id === user?.id && data.status === 'draft');
-      
-      if (!canEdit) {
+      // Check permissions using the usePermissions hook
+      if (!canEditTicket(data)) {
         toast({
           title: "Access Denied",
           description: "You don't have permission to edit this ticket",
@@ -112,6 +104,7 @@ const EditTicket = () => {
         return;
       }
 
+      setTicket(data);
       setFormData({
         title: data.title || '',
         description: data.description || '',
@@ -402,7 +395,7 @@ const EditTicket = () => {
             {/* Photo Upload */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium flex items-center gap-2">
-                <Camera className="h-5 w-5" />
+                <Upload className="h-5 w-5" />
                 Add New Photos
               </h3>
               
