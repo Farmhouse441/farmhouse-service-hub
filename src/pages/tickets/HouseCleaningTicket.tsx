@@ -316,22 +316,7 @@ export default function HouseCleaningTicket() {
             </CardContent>
           </Card>
 
-          {/* Final Photos */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Final Whole House Gallery</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PhotoUpload
-                label="Whole House After Photos"
-                required
-                photos={wholeHousePhotos}
-                onPhotosChange={setWholeHousePhotos}
-                maxPhotos={20}
-              />
-            </CardContent>
-          </Card>
-
+         
           {/* Notes and Damage */}
           <Card>
             <CardHeader>
