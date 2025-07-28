@@ -91,6 +91,96 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          can_change_from_additional_info_requested: boolean
+          can_change_from_approved_not_paid: boolean
+          can_change_from_approved_paid: boolean
+          can_change_from_declined: boolean
+          can_change_from_draft: boolean
+          can_change_from_submitted: boolean
+          can_change_to_additional_info_requested: boolean
+          can_change_to_approved_not_paid: boolean
+          can_change_to_approved_paid: boolean
+          can_change_to_declined: boolean
+          can_change_to_draft: boolean
+          can_change_to_submitted: boolean
+          can_create_service_ticket: boolean
+          can_delete_additional_info_requested: boolean
+          can_delete_approved_not_paid: boolean
+          can_delete_approved_paid: boolean
+          can_delete_declined: boolean
+          can_delete_draft: boolean
+          can_delete_submitted: boolean
+          can_edit_all_tickets: boolean
+          can_edit_own_tickets: boolean
+          can_view_all_tickets: boolean
+          can_view_own_tickets: boolean
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          can_change_from_additional_info_requested?: boolean
+          can_change_from_approved_not_paid?: boolean
+          can_change_from_approved_paid?: boolean
+          can_change_from_declined?: boolean
+          can_change_from_draft?: boolean
+          can_change_from_submitted?: boolean
+          can_change_to_additional_info_requested?: boolean
+          can_change_to_approved_not_paid?: boolean
+          can_change_to_approved_paid?: boolean
+          can_change_to_declined?: boolean
+          can_change_to_draft?: boolean
+          can_change_to_submitted?: boolean
+          can_create_service_ticket?: boolean
+          can_delete_additional_info_requested?: boolean
+          can_delete_approved_not_paid?: boolean
+          can_delete_approved_paid?: boolean
+          can_delete_declined?: boolean
+          can_delete_draft?: boolean
+          can_delete_submitted?: boolean
+          can_edit_all_tickets?: boolean
+          can_edit_own_tickets?: boolean
+          can_view_all_tickets?: boolean
+          can_view_own_tickets?: boolean
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          can_change_from_additional_info_requested?: boolean
+          can_change_from_approved_not_paid?: boolean
+          can_change_from_approved_paid?: boolean
+          can_change_from_declined?: boolean
+          can_change_from_draft?: boolean
+          can_change_from_submitted?: boolean
+          can_change_to_additional_info_requested?: boolean
+          can_change_to_approved_not_paid?: boolean
+          can_change_to_approved_paid?: boolean
+          can_change_to_declined?: boolean
+          can_change_to_draft?: boolean
+          can_change_to_submitted?: boolean
+          can_create_service_ticket?: boolean
+          can_delete_additional_info_requested?: boolean
+          can_delete_approved_not_paid?: boolean
+          can_delete_approved_paid?: boolean
+          can_delete_declined?: boolean
+          can_delete_draft?: boolean
+          can_delete_submitted?: boolean
+          can_edit_all_tickets?: boolean
+          can_edit_own_tickets?: boolean
+          can_view_all_tickets?: boolean
+          can_view_own_tickets?: boolean
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_tickets: {
         Row: {
           admin_notes: string | null
@@ -180,6 +270,25 @@ export type Database = {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: boolean
+      }
+      user_can_change_ticket_status: {
+        Args: {
+          _user_id: string
+          _from_status: Database["public"]["Enums"]["ticket_status"]
+          _to_status: Database["public"]["Enums"]["ticket_status"]
+        }
+        Returns: boolean
+      }
+      user_can_delete_ticket_by_status: {
+        Args: {
+          _user_id: string
+          _status: Database["public"]["Enums"]["ticket_status"]
+        }
+        Returns: boolean
+      }
+      user_has_permission: {
+        Args: { _user_id: string; _permission: string }
         Returns: boolean
       }
     }
