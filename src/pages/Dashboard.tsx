@@ -206,10 +206,16 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold">Service Provider Portal</h1>
           <div className="flex items-center gap-4">
             {isAdmin && (
-              <Badge variant="outline" className="gap-1">
-                <Settings className="h-3 w-3" />
-                Admin
-              </Badge>
+              <>
+                <Button variant="outline" onClick={() => navigate('/manage-users')}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Users
+                </Button>
+                <Badge variant="outline" className="gap-1">
+                  <Settings className="h-3 w-3" />
+                  Admin
+                </Badge>
+              </>
             )}
             <span className="text-sm text-muted-foreground">
               Welcome, {user.email}

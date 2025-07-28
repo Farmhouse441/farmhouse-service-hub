@@ -7,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import ManageUsers from "./pages/ManageUsers";
 import NewTicket from "./pages/NewTicket";
 import TicketRoute from "./pages/TicketRoute";
 import TicketView from "./pages/TicketView";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Dashboard />} />
+            <Route path="/manage-users" element={<ManageUsers />} />
             <Route path="/new-ticket" element={<NewTicket />} />
             <Route path="/ticket/:template" element={<TicketRoute />} />
             <Route path="/view-ticket/:id" element={<TicketView />} />
