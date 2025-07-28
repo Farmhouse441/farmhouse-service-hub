@@ -159,7 +159,7 @@ const Dashboard = () => {
 
   const filteredTickets = tickets.filter((ticket: any) => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.property_address.toLowerCase().includes(searchTerm.toLowerCase());
+                         (ticket.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -324,9 +324,9 @@ const Dashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Property Address</TableHead>
-                      <TableHead>Status</TableHead>
+                       <TableHead>Title</TableHead>
+                       <TableHead>Description</TableHead>
+                       <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Total Amount</TableHead>
                       <TableHead>Actions</TableHead>
@@ -335,10 +335,10 @@ const Dashboard = () => {
                   <TableBody>
                     {filteredTickets.map((ticket: any) => (
                       <TableRow key={ticket.id}>
-                        <TableCell className="font-medium">
-                          {ticket.title}
-                        </TableCell>
-                        <TableCell>{ticket.property_address}</TableCell>
+                         <TableCell className="font-medium">
+                           {ticket.title}
+                         </TableCell>
+                         <TableCell>{ticket.description || '-'}</TableCell>
                         <TableCell>{getStatusBadge(ticket.status)}</TableCell>
                         <TableCell>
                           {format(new Date(ticket.created_at), 'MMM d, yyyy')}
@@ -348,7 +348,12 @@ const Dashboard = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="gap-1">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="gap-1"
+                              onClick={() => navigate(`/view-ticket/${ticket.id}`)}
+                            >
                               <Eye className="h-3 w-3" />
                               View
                             </Button>

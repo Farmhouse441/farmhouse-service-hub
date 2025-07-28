@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NewTicket from "./pages/NewTicket";
 import TicketRoute from "./pages/TicketRoute";
+import TicketView from "./pages/TicketView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/admin" element={<Dashboard />} />
             <Route path="/new-ticket" element={<NewTicket />} />
             <Route path="/ticket/:template" element={<TicketRoute />} />
+            <Route path="/view-ticket/:id" element={<TicketView />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
