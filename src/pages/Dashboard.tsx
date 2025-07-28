@@ -57,7 +57,7 @@ const Dashboard = () => {
               Manage your service tickets and work reports
             </p>
           </div>
-          <Button onClick={() => navigate('/tickets/new')} className="gap-2">
+          <Button onClick={() => navigate('/new-ticket')} className="gap-2">
             <Plus className="h-4 w-4" />
             New Service Ticket
           </Button>
@@ -93,7 +93,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground mb-4">
                 Create your first service ticket to get started
               </p>
-              <Button onClick={() => navigate('/tickets/new')}>
+              <Button onClick={() => navigate('/new-ticket')}>
                 Create Service Ticket
               </Button>
             </div>
