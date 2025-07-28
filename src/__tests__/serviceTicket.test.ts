@@ -64,9 +64,14 @@ describe('Service Ticket Creation', () => {
       console.log('Upload successful:', data);
     }
 
-    // For now, we expect this to fail due to RLS policies
-    expect(error).not.toBeNull();
-    expect(error?.message).toContain('row-level security policy');
+    // This should now work with the storage policies in place
+    if (error) {
+      console.error('Upload failed:', error);
+      expect(error).toBeNull(); // Should pass now
+    } else {
+      console.log('Upload successful:', data);
+      expect(data).toBeDefined();
+    }
   });
 
   it('should test storage bucket permissions', async () => {
