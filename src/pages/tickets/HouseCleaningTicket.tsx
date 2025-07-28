@@ -24,10 +24,9 @@ const rooms = [
 ];
 
 const mandatoryPhotos = [
-  'Inside Fridge/Freezer - Before',
   'Inside Fridge/Freezer - After',
-  'Kitchen Sink Area',
-  'Trash Left Behind (if any)'
+  'Grill',
+  'Oven'
 ];
 
 const checklistItems = [
@@ -281,7 +280,7 @@ export default function HouseCleaningTicket() {
           {/* Mandatory Photos */}
           <Card>
             <CardHeader>
-              <CardTitle>Mandatory Documentation</CardTitle>
+              <CardTitle>Appliance Documentation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {mandatoryPhotos.map((category) => (
