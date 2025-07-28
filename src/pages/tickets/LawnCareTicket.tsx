@@ -38,7 +38,8 @@ export default function LawnCareTicket() {
     grassHeightBefore: '',
     notes: '',
     hasDamage: false,
-    damageNotes: ''
+    damageNotes: '',
+    totalAmount: 0
   });
 
   const [yardPhotos, setYardPhotos] = useState<{ [key: string]: { before: File[], after: File[] } }>({});
@@ -114,6 +115,7 @@ export default function LawnCareTicket() {
       work_end_date: `${serviceDate}T${formData.endTime}:00`,
       before_photos: allBeforePhotos,
       after_photos: allAfterPhotos,
+      total_amount: formData.totalAmount,
       status: 'submitted' as const
     };
 
@@ -196,6 +198,23 @@ export default function LawnCareTicket() {
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Any special instructions or notes"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="total-amount">
+                  Total Amount Billed
+                </Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">$</span>
+                  <Input
+                    id="total-amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.totalAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, totalAmount: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

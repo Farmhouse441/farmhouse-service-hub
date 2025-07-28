@@ -31,21 +31,11 @@ export function FinancialSection({
   calculatedHours,
   staff
 }: FinancialSectionProps) {
-  const [useCalculatedAmount, setUseCalculatedAmount] = useState(true);
-  
-  const calculatedAmount = hourlyRate * calculatedHours;
-  const displayAmount = useCalculatedAmount ? calculatedAmount : totalAmount;
+  const calculatedAmount = hourlyRate > 0 ? hourlyRate * calculatedHours : 0;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     onInvoiceFileChange(file);
-  };
-
-  const handleAmountModeChange = (useCalculated: boolean) => {
-    setUseCalculatedAmount(useCalculated);
-    if (useCalculated) {
-      onTotalAmountChange(calculatedAmount);
-    }
   };
 
   return (
@@ -57,30 +47,10 @@ export function FinancialSection({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Hourly Rate */}
-        <div className="space-y-2">
-          <Label htmlFor="hourly-rate">
-            Hourly Rate
-          </Label>
-          <div className="flex items-center gap-2">
-            <span className="text-sm">$</span>
-            <Input
-              id="hourly-rate"
-              type="number"
-              step="0.01"
-              min="0"
-              value={hourlyRate}
-              onChange={(e) => onHourlyRateChange(parseFloat(e.target.value) || 0)}
-              placeholder="0.00"
-            />
-            <span className="text-sm text-muted-foreground">per hour</span>
-          </div>
-        </div>
-
-        {/* Labor Calculation Summary */}
+        {/* Labor Calculation Summary - only shows if hourly rate is set */}
         {calculatedHours > 0 && hourlyRate > 0 && (
           <div className="p-4 bg-muted rounded-lg space-y-2">
-            <h4 className="font-medium">Labor Calculation</h4>
+            <h4 className="font-medium">Labor Cost Calculation</h4>
             <div className="text-sm space-y-1">
               <div className="flex justify-between">
                 <span>Staff Count:</span>
@@ -102,48 +72,6 @@ export function FinancialSection({
             </div>
           </div>
         )}
-
-        {/* Amount Charged */}
-        <div className="space-y-4">
-          <Label>Total Amount Charged</Label>
-          
-          {calculatedAmount > 0 && (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={useCalculatedAmount ? "default" : "outline"}
-                onClick={() => handleAmountModeChange(true)}
-                className="flex-1"
-              >
-                Use Calculated (${calculatedAmount.toFixed(2)})
-              </Button>
-              <Button
-                type="button"
-                variant={!useCalculatedAmount ? "default" : "outline"}
-                onClick={() => handleAmountModeChange(false)}
-                className="flex-1"
-              >
-                Enter Manual Amount
-              </Button>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm">$</span>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={displayAmount}
-              onChange={(e) => {
-                setUseCalculatedAmount(false);
-                onTotalAmountChange(parseFloat(e.target.value) || 0);
-              }}
-              placeholder="0.00"
-              disabled={useCalculatedAmount && calculatedAmount > 0}
-            />
-          </div>
-        </div>
 
         {/* Invoice Number */}
         <div className="space-y-2">

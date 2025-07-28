@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ArrowLeft, AlertTriangle, CalendarIcon } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, CalendarIcon, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { PhotoUpload } from '@/components/ticket/PhotoUpload';
@@ -190,6 +190,23 @@ export default function CustomTicket() {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="total-amount">
+                  Total Amount Billed
+                </Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">$</span>
+                  <Input
+                    id="total-amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.totalAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, totalAmount: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -226,19 +243,64 @@ export default function CustomTicket() {
             </CardContent>
           </Card>
 
-          {/* Financial Information */}
-          <FinancialSection
-            hourlyRate={formData.hourlyRate}
-            onHourlyRateChange={(rate) => setFormData(prev => ({ ...prev, hourlyRate: rate }))}
-            totalAmount={formData.totalAmount}
-            onTotalAmountChange={(amount) => setFormData(prev => ({ ...prev, totalAmount: amount }))}
-            invoiceNumber={formData.invoiceNumber}
-            onInvoiceNumberChange={(number) => setFormData(prev => ({ ...prev, invoiceNumber: number }))}
-            invoiceFile={invoiceFile}
-            onInvoiceFileChange={setInvoiceFile}
-            calculatedHours={calculateHours()}
-            staff={formData.staff}
-          />
+          {/* Invoice Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Invoice Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="invoice-number">
+                  Invoice Number
+                </Label>
+                <Input
+                  id="invoice-number"
+                  value={formData.invoiceNumber}
+                  onChange={(e) => setFormData(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                  placeholder="INV-2024-001"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optional: Reference number for your invoice
+                </p>
+              </div>
+
+              {/* Invoice File Upload */}
+              <div className="space-y-2">
+                <Label htmlFor="invoice-file">
+                  Invoice File (Optional)
+                </Label>
+                <div className="space-y-2">
+                  <Input
+                    id="invoice-file"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setInvoiceFile(file);
+                    }}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
+                  />
+                  {invoiceFile && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <FileText className="h-4 w-4" />
+                      <span>{invoiceFile.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setInvoiceFile(null)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Accepted formats: PDF, JPG, PNG, DOC, DOCX (max 10MB)
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Notes and Damage */}
           <Card>
