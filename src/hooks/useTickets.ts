@@ -77,7 +77,7 @@ export const useTickets = () => {
           work_end_date: ticketData.work_end_date,
           before_photos: beforePhotoUrls,
           after_photos: afterPhotoUrls,
-          status: ticketData.status || 'submitted'
+          status: ticketData.status || 'draft'
         })
         .select()
         .single();

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, FileText, DollarSign, Camera, User } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, DollarSign, Camera, User, Edit, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -130,9 +130,18 @@ const TicketView = () => {
         return;
       }
 
+      const statusLabels = {
+        draft: 'Draft',
+        submitted: 'Submitted',
+        additional_info_requested: 'Additional Info Requested',
+        approved_not_paid: 'Approved (Unpaid)',
+        approved_paid: 'Approved (Paid)',
+        declined: 'Declined'
+      };
+
       toast({
         title: "Success",
-        description: `Ticket status updated to ${newStatus}`,
+        description: `Ticket status updated to ${statusLabels[newStatus]}`,
       });
 
       // Update local state
@@ -140,6 +149,15 @@ const TicketView = () => {
     } catch (error) {
       console.error('Error updating ticket status:', error);
     }
+  };
+
+  const handleSubmitTicket = async () => {
+    await updateTicketStatus('submitted');
+  };
+
+  const handleEditTicket = () => {
+    // Navigate to edit mode - we'll reuse the ticket creation form but in edit mode
+    navigate(`/edit-ticket/${ticket.id}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -188,6 +206,8 @@ const TicketView = () => {
 
   const isAdmin = userRole === 'admin';
   const lineItemsTotal = ticket.line_items?.reduce((sum, item) => sum + Number(item.total_amount || 0), 0) || 0;
+  const canEdit = isAdmin || (ticket.user_id === user?.id && ticket.status === 'draft');
+  const canSubmit = ticket.user_id === user?.id && ticket.status === 'draft';
 
   return (
     <div className="min-h-screen bg-background">
@@ -203,7 +223,21 @@ const TicketView = () => {
               <h1 className="text-2xl font-bold">{ticket.title}</h1>
               <p className="text-muted-foreground">Service Ticket Details</p>
             </div>
-            {getStatusBadge(ticket.status)}
+            <div className="flex items-center gap-3">
+              {canSubmit && (
+                <Button onClick={handleSubmitTicket} className="gap-2">
+                  <Send className="h-4 w-4" />
+                  Submit Ticket
+                </Button>
+              )}
+              {canEdit && (
+                <Button variant="outline" onClick={handleEditTicket} className="gap-2">
+                  <Edit className="h-4 w-4" />
+                  Edit Ticket
+                </Button>
+              )}
+              {getStatusBadge(ticket.status)}
+            </div>
           </div>
         </div>
       </header>

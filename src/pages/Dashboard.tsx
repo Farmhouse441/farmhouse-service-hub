@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, FileText, Clock, CheckCircle, XCircle, Search, Settings, Users, Eye } from 'lucide-react';
+import { Plus, FileText, Clock, CheckCircle, XCircle, Search, Settings, Users, Eye, Edit, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -135,6 +135,34 @@ const Dashboard = () => {
       fetchTickets(); // Refresh the list
     } catch (error) {
       console.error('Error updating ticket status:', error);
+    }
+  };
+
+  const handleSubmitTicket = async (ticketId: string) => {
+    try {
+      const { error } = await supabase
+        .from('service_tickets')
+        .update({ status: 'submitted' })
+        .eq('id', ticketId);
+
+      if (error) {
+        console.error('Error submitting ticket:', error);
+        toast({
+          title: "Error",
+          description: "Failed to submit ticket",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Ticket submitted successfully",
+      });
+
+      fetchTickets(); // Refresh the list
+    } catch (error) {
+      console.error('Error submitting ticket:', error);
     }
   };
 
@@ -357,6 +385,33 @@ const Dashboard = () => {
                               <Eye className="h-3 w-3" />
                               View
                             </Button>
+                            
+                            {/* Edit button - for draft tickets owned by user or admin */}
+                            {(isAdmin || (ticket.user_id === user?.id && ticket.status === 'draft')) && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="gap-1"
+                                onClick={() => navigate(`/edit-ticket/${ticket.id}`)}
+                              >
+                                <Edit className="h-3 w-3" />
+                                Edit
+                              </Button>
+                            )}
+                            
+                            {/* Submit button - for draft tickets owned by user */}
+                            {ticket.user_id === user?.id && ticket.status === 'draft' && (
+                              <Button 
+                                size="sm" 
+                                className="gap-1"
+                                onClick={() => handleSubmitTicket(ticket.id)}
+                              >
+                                <Send className="h-3 w-3" />
+                                Submit
+                              </Button>
+                            )}
+                            
+                            {/* Admin status change dropdown */}
                             {isAdmin && (
                               <Select
                                 value={ticket.status}
