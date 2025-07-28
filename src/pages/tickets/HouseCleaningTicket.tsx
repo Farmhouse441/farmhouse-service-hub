@@ -70,6 +70,7 @@ export default function HouseCleaningTicket() {
   const [roomPhotos, setRoomPhotos] = useState<{ [key: string]: { before: File[], after: File[] } }>({});
   const [mandatoryPhotoFiles, setMandatoryPhotoFiles] = useState<{ [key: string]: File[] }>({});
   const [wholeHousePhotos, setWholeHousePhotos] = useState<File[]>([]);
+  const [damagePhotos, setDamagePhotos] = useState<File[]>([]);
   const [checklist, setChecklist] = useState<{ [key: string]: boolean }>({});
 
   if (!user) {
@@ -102,8 +103,8 @@ export default function HouseCleaningTicket() {
   };
 
   const validateForm = () => {
-    // Check required fields
-    if (!formData.checkoutDate || !formData.startTime || !formData.endTime || !formData.notes) {
+    // Check required fields (notes is now optional)
+    if (!formData.checkoutDate || !formData.startTime || !formData.endTime) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -372,14 +373,13 @@ export default function HouseCleaningTicket() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="notes">
-                  Service Notes <span className="text-destructive">*</span>
+                  Service Notes
                 </Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   placeholder="Document any issues, exceptions, or important notes about the service"
-                  required
                 />
               </div>
               
@@ -398,13 +398,21 @@ export default function HouseCleaningTicket() {
               </div>
 
               {formData.hasDamage && (
-                <div className="space-y-2">
-                  <Label htmlFor="damage-notes">Damage Details</Label>
-                  <Textarea
-                    id="damage-notes"
-                    value={formData.damageNotes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, damageNotes: e.target.value }))}
-                    placeholder="Describe any damage found or caused"
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="damage-notes">Damage Details</Label>
+                    <Textarea
+                      id="damage-notes"
+                      value={formData.damageNotes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, damageNotes: e.target.value }))}
+                      placeholder="Describe any damage found or caused"
+                    />
+                  </div>
+                  <PhotoUpload
+                    label="Damage Photos"
+                    photos={damagePhotos}
+                    onPhotosChange={setDamagePhotos}
+                    maxPhotos={10}
                   />
                 </div>
               )}
