@@ -6,10 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, FileText, DollarSign, Camera, User, Edit, Send } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, DollarSign, Camera, User, Edit, Send, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { usePDFReport } from '@/hooks/usePDFReport';
 
 interface TicketData {
   id: string;
@@ -32,6 +33,12 @@ interface TicketData {
     hourly_rate: number;
     total_amount: number;
   }>;
+  profiles: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    company_name: string;
+  };
 }
 
 const TicketView = () => {
@@ -43,6 +50,7 @@ const TicketView = () => {
   const [ticket, setTicket] = useState<TicketData | null>(null);
   const [userRole, setUserRole] = useState<string>('user');
   const [loading, setLoading] = useState(true);
+  const { generatePDF } = usePDFReport();
 
   useEffect(() => {
     if (!user) {
@@ -82,7 +90,7 @@ const TicketView = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
+      const { data: ticketData, error } = await supabase
         .from('service_tickets')
         .select(`
           *,
@@ -102,7 +110,29 @@ const TicketView = () => {
         return;
       }
 
-      setTicket(data);
+      // Fetch profile data separately
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email, company_name')
+        .eq('user_id', ticketData.user_id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
+
+      // Combine the data
+      const combinedData = {
+        ...ticketData,
+        profiles: profileData || {
+          first_name: '',
+          last_name: '',
+          email: '',
+          company_name: ''
+        }
+      };
+
+      setTicket(combinedData);
     } catch (error) {
       console.error('Error fetching ticket:', error);
       navigate('/dashboard');
@@ -158,6 +188,25 @@ const TicketView = () => {
   const handleEditTicket = () => {
     // Navigate to edit mode - we'll reuse the ticket creation form but in edit mode
     navigate(`/edit-ticket/${ticket.id}`);
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!ticket) return;
+    
+    try {
+      await generatePDF(ticket);
+      toast({
+        title: "Success",
+        description: "PDF report downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF report",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -224,6 +273,10 @@ const TicketView = () => {
               <p className="text-muted-foreground">Service Ticket Details</p>
             </div>
             <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={handleDownloadPDF} className="gap-2">
+                <Download className="h-4 w-4" />
+                Download PDF
+              </Button>
               {canSubmit && (
                 <Button onClick={handleSubmitTicket} className="gap-2">
                   <Send className="h-4 w-4" />
