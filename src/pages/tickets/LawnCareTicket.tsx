@@ -14,8 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 const yardAreas = [
   'Front Yard',
   'Back Yard',
-  'Side Yard (Left)',
-  'Side Yard (Right)'
+  'Sugar Shack and Orchard',
 ];
 
 export default function LawnCareTicket() {
