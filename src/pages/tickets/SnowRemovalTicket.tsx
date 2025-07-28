@@ -29,7 +29,6 @@ export default function SnowRemovalTicket() {
 
   const [formData, setFormData] = useState({
     title: 'Snow Removal',
-    propertyAddress: '',
     description: '',
     startTime: '',
     endTime: '',
@@ -65,7 +64,7 @@ export default function SnowRemovalTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.propertyAddress || !formData.startTime || !formData.endTime || !formData.notes) {
+    if (!formData.startTime || !formData.endTime || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -142,18 +141,6 @@ export default function SnowRemovalTicket() {
               <CardTitle>Service Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="address">
-                  Property Address <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="address"
-                  value={formData.propertyAddress}
-                  onChange={(e) => setFormData(prev => ({ ...prev, propertyAddress: e.target.value }))}
-                  placeholder="Enter property address"
-                  required
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Additional Description</Label>
                 <Textarea

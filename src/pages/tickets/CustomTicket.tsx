@@ -18,7 +18,6 @@ export default function CustomTicket() {
 
   const [formData, setFormData] = useState({
     title: '',
-    propertyAddress: '',
     description: '',
     startTime: '',
     endTime: '',
@@ -38,7 +37,7 @@ export default function CustomTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.title || !formData.propertyAddress || !formData.description || !formData.startTime || !formData.endTime || !formData.notes) {
+    if (!formData.title || !formData.description || !formData.startTime || !formData.endTime || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -109,18 +108,6 @@ export default function CustomTicket() {
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="e.g., Gutter Cleaning, Painting, Repairs"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">
-                  Property Address <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="address"
-                  value={formData.propertyAddress}
-                  onChange={(e) => setFormData(prev => ({ ...prev, propertyAddress: e.target.value }))}
-                  placeholder="Enter property address"
                   required
                 />
               </div>

@@ -25,7 +25,6 @@ export default function LawnCareTicket() {
 
   const [formData, setFormData] = useState({
     title: 'Lawn Mowing & Weed Whacking',
-    propertyAddress: '',
     description: '',
     startTime: '',
     endTime: '',
@@ -55,7 +54,7 @@ export default function LawnCareTicket() {
 
   const validateForm = () => {
     // Check required fields
-    if (!formData.propertyAddress || !formData.startTime || !formData.endTime || !formData.grassHeightBefore || !formData.notes) {
+    if (!formData.startTime || !formData.endTime || !formData.grassHeightBefore || !formData.notes) {
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields.",
@@ -120,18 +119,6 @@ export default function LawnCareTicket() {
               <CardTitle>Service Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="address">
-                  Property Address <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="address"
-                  value={formData.propertyAddress}
-                  onChange={(e) => setFormData(prev => ({ ...prev, propertyAddress: e.target.value }))}
-                  placeholder="Enter property address"
-                  required
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="grass-height">
                   Grass Height Before (inches) <span className="text-destructive">*</span>
