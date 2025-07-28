@@ -22,6 +22,7 @@ export default function CustomTicket() {
     startTime: '',
     endTime: '',
     hoursSpent: 0,
+    staff: 1,
     notes: '',
     hasDamage: false,
     damageNotes: ''
@@ -135,6 +136,8 @@ export default function CustomTicket() {
             hoursSpent={formData.hoursSpent}
             onHoursChange={(hours) => setFormData(prev => ({ ...prev, hoursSpent: hours }))}
             allowManualHours={true}
+            staff={formData.staff}
+            onStaffChange={(staff) => setFormData(prev => ({ ...prev, staff }))}
           />
 
           {/* Photo Documentation */}

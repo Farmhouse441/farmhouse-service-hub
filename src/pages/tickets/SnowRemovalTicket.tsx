@@ -32,6 +32,7 @@ export default function SnowRemovalTicket() {
     description: '',
     startTime: '',
     endTime: '',
+    staff: 1,
     notes: '',
     hasDamage: false,
     damageNotes: ''
@@ -159,6 +160,8 @@ export default function SnowRemovalTicket() {
             endTime={formData.endTime}
             onStartTimeChange={(time) => setFormData(prev => ({ ...prev, startTime: time }))}
             onEndTimeChange={(time) => setFormData(prev => ({ ...prev, endTime: time }))}
+            staff={formData.staff}
+            onStaffChange={(staff) => setFormData(prev => ({ ...prev, staff }))}
           />
 
           {/* Area Photos */}

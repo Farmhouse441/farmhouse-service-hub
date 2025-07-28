@@ -28,6 +28,7 @@ export default function LawnCareTicket() {
     description: '',
     startTime: '',
     endTime: '',
+    staff: 1,
     grassHeightBefore: '',
     notes: '',
     hasDamage: false,
@@ -149,6 +150,8 @@ export default function LawnCareTicket() {
             endTime={formData.endTime}
             onStartTimeChange={(time) => setFormData(prev => ({ ...prev, startTime: time }))}
             onEndTimeChange={(time) => setFormData(prev => ({ ...prev, endTime: time }))}
+            staff={formData.staff}
+            onStaffChange={(staff) => setFormData(prev => ({ ...prev, staff }))}
           />
 
           {/* Yard Area Photos */}

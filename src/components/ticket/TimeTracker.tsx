@@ -13,6 +13,8 @@ interface TimeTrackerProps {
   hoursSpent?: number;
   onHoursChange?: (hours: number) => void;
   allowManualHours?: boolean;
+  staff: number;
+  onStaffChange: (staff: number) => void;
 }
 
 export function TimeTracker({
@@ -22,21 +24,24 @@ export function TimeTracker({
   onEndTimeChange,
   hoursSpent,
   onHoursChange,
-  allowManualHours = false
+  allowManualHours = false,
+  staff,
+  onStaffChange
 }: TimeTrackerProps) {
   const [isTracking, setIsTracking] = useState(false);
   const [calculatedHours, setCalculatedHours] = useState(0);
 
-  // Calculate hours when start/end times change
+  // Calculate hours when start/end times or staff changes
   useEffect(() => {
     if (startTime && endTime) {
       const start = new Date(`2024-01-01T${startTime}`);
       const end = new Date(`2024-01-01T${endTime}`);
       const diffMs = end.getTime() - start.getTime();
-      const hours = Math.max(0, diffMs / (1000 * 60 * 60));
-      setCalculatedHours(Math.round(hours * 100) / 100);
+      const baseHours = Math.max(0, diffMs / (1000 * 60 * 60));
+      const totalHours = baseHours * staff;
+      setCalculatedHours(Math.round(totalHours * 100) / 100);
     }
-  }, [startTime, endTime]);
+  }, [startTime, endTime, staff]);
 
   const handleStartTracking = () => {
     const now = new Date();
@@ -88,6 +93,25 @@ export function TimeTracker({
           </Button>
         </div>
 
+        {/* Staff input */}
+        <div className="space-y-2">
+          <Label htmlFor="staff">
+            Staff Count <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="staff"
+            type="number"
+            min="1"
+            value={staff}
+            onChange={(e) => onStaffChange(parseInt(e.target.value) || 1)}
+            placeholder="Number of staff working"
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            Hours will be multiplied by staff count
+          </p>
+        </div>
+
         {/* Manual time entry */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -130,7 +154,7 @@ export function TimeTracker({
                 placeholder="Enter hours manually"
               />
               <p className="text-xs text-muted-foreground">
-                Calculated: {calculatedHours} hours (you can override this)
+                Calculated: {calculatedHours} hours ({staff} staff × base hours)
               </p>
             </div>
           ) : (
@@ -140,7 +164,7 @@ export function TimeTracker({
               </span>
               {startTime && endTime && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  From {startTime} to {endTime}
+                  From {startTime} to {endTime} ({staff} staff)
                 </p>
               )}
             </div>

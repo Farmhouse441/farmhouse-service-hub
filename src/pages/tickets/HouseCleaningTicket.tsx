@@ -59,6 +59,7 @@ export default function HouseCleaningTicket() {
     checkoutDate: undefined as Date | undefined,
     startTime: '',
     endTime: '',
+    staff: 1,
     notes: '',
     hasDamage: false,
     damageNotes: ''
@@ -245,6 +246,8 @@ export default function HouseCleaningTicket() {
             endTime={formData.endTime}
             onStartTimeChange={(time) => setFormData(prev => ({ ...prev, startTime: time }))}
             onEndTimeChange={(time) => setFormData(prev => ({ ...prev, endTime: time }))}
+            staff={formData.staff}
+            onStaffChange={(staff) => setFormData(prev => ({ ...prev, staff }))}
           />
 
           {/* Room-by-Room Photos */}
