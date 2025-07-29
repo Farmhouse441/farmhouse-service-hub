@@ -42,18 +42,19 @@ export const usePermissions = (): UserPermissions & { loading: boolean } => {
           .eq('user_id', user.id)
           .single();
 
+        let roleData = userRoleData;
         if (roleError) {
           console.error('Error fetching user role:', roleError);
-          setPermissions(null);
-          setLoading(false);
-          return;
+          // Default to 'user' role if no role is assigned
+          console.log('No role found for user, defaulting to "user" role');
+          roleData = { role: 'user' };
         }
 
         // Then fetch role permissions
         const { data: rolePermissionsData, error: permissionsError } = await supabase
           .from('role_permissions')
           .select('*')
-          .eq('role', userRoleData.role)
+          .eq('role', roleData.role)
           .single();
 
         if (permissionsError) {
@@ -92,14 +93,32 @@ export const usePermissions = (): UserPermissions & { loading: boolean } => {
           // Combined permission checks
           canEditTicket: (ticket: { user_id: string; status: string }) => {
             const isOwner = ticket.user_id === user.id;
-            return Boolean(isOwner 
-              ? rolePermissions.can_edit_own_tickets 
-              : rolePermissions.can_edit_all_tickets);
+            const canEditOwn = Boolean(rolePermissions.can_edit_own_tickets);
+            const canEditAll = Boolean(rolePermissions.can_edit_all_tickets);
+            
+
+            
+            // Users can edit their own tickets only if they're in draft status
+            if (isOwner) {
+              return canEditOwn && ticket.status === 'draft';
+            }
+            
+            // Admins can edit any ticket regardless of status
+            return canEditAll;
           },
           
           canDeleteTicket: (ticket: { user_id: string; status: string }) => {
+            const isOwner = ticket.user_id === user.id;
             const key = `can_delete_${ticket.status}` as keyof typeof rolePermissions;
-            return Boolean(rolePermissions[key]);
+            const canDeleteInStatus = Boolean(rolePermissions[key]);
+            
+            // Users can delete their own tickets only if they're in draft status
+            if (isOwner) {
+              return canDeleteInStatus && ticket.status === 'draft';
+            }
+            
+            // Admins can delete tickets based on status permissions
+            return canDeleteInStatus;
           },
           
           canChangeTicketStatus: (ticket: { user_id: string; status: string }, newStatus: string) => {

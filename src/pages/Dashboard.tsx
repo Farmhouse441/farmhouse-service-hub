@@ -32,6 +32,12 @@ const Dashboard = () => {
     before_photos?: string[];
     after_photos?: string[];
     invoice_file?: string | null;
+    profiles?: {
+      first_name: string;
+      last_name: string;
+      email: string;
+      company_name: string;
+    };
   }>>([]);
   const [userRole, setUserRole] = useState<string>('user');
   const [loading, setLoading] = useState(true);
@@ -108,7 +114,27 @@ const Dashboard = () => {
         return;
       }
 
-      setTickets(data || []);
+      // If admin, fetch user profiles for all tickets
+      if (userRole === 'admin' && data && data.length > 0) {
+        const userIds = [...new Set(data.map(ticket => ticket.user_id))];
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, first_name, last_name, email, company_name')
+          .in('user_id', userIds);
+
+        if (!profilesError && profilesData) {
+          const profilesMap = new Map(profilesData.map(profile => [profile.user_id, profile]));
+          const ticketsWithProfiles = data.map(ticket => ({
+            ...ticket,
+            profiles: profilesMap.get(ticket.user_id)
+          }));
+          setTickets(ticketsWithProfiles);
+        } else {
+          setTickets(data);
+        }
+      } else {
+        setTickets(data || []);
+      }
       
       // Calculate stats
       const ticketStats = {
@@ -127,6 +153,8 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+
 
 
 
@@ -321,7 +349,7 @@ const Dashboard = () => {
                   <TableHeader>
                     <TableRow>
                        <TableHead>Title</TableHead>
-                       <TableHead>Description</TableHead>
+                       <TableHead>{isAdmin ? 'Created By' : 'Description'}</TableHead>
                        <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Submitted</TableHead>
@@ -339,7 +367,24 @@ const Dashboard = () => {
                              {ticket.title}
                            </button>
                          </TableCell>
-                         <TableCell>{ticket.description || '-'}</TableCell>
+                         <TableCell>
+                           {isAdmin ? (
+                             ticket.profiles ? (
+                               <div>
+                                 <div className="font-medium">
+                                   {ticket.profiles.first_name} {ticket.profiles.last_name}
+                                 </div>
+                                 <div className="text-sm text-muted-foreground">
+                                   {ticket.profiles.company_name || ticket.profiles.email}
+                                 </div>
+                               </div>
+                             ) : (
+                               'Unknown User'
+                             )
+                           ) : (
+                             ticket.description || '-'
+                           )}
+                         </TableCell>
                         <TableCell>{getStatusBadge(ticket.status)}</TableCell>
                         <TableCell>
                           {format(new Date(ticket.created_at), 'MMM d, yyyy')}

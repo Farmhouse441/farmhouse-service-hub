@@ -293,6 +293,8 @@ const TicketView = () => {
   const lineItemsTotal = ticket.line_items?.reduce((sum, item) => sum + Number(item.total_amount || 0), 0) || 0;
   const canEdit = canEditTicket(ticket);
 
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
