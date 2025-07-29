@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, FileText, Clock, CheckCircle, XCircle, Search, Settings, Users } from 'lucide-react';
+import { Plus, FileText, Clock, CheckCircle, XCircle, Search, Settings, Users, Calendar, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTickets } from '@/hooks/useTickets';
@@ -27,6 +29,7 @@ const Dashboard = () => {
     status: 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined';
     created_at: string;
     updated_at: string;
+    work_start_date: string;
     total_amount: number;
     user_id: string;
     before_photos?: string[];
@@ -42,14 +45,19 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState<string>('user');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
   const [stats, setStats] = useState({
     total: 0,
     draft: 0,
     submitted: 0,
     approved: 0,
     declined: 0,
-    info_requested: 0
+    info_requested: 0,
+    totalAmount: 0
   });
 
   useEffect(() => {
@@ -144,6 +152,7 @@ const Dashboard = () => {
         approved: data?.filter(t => t.status === 'approved_not_paid' || t.status === 'approved_paid').length || 0,
         declined: data?.filter(t => t.status === 'declined').length || 0,
         info_requested: data?.filter(t => t.status === 'additional_info_requested').length || 0,
+        totalAmount: data?.reduce((sum, t) => sum + (Number(t.total_amount) || 0), 0) || 0,
       };
       setStats(ticketStats);
       
@@ -180,11 +189,41 @@ const Dashboard = () => {
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (ticket.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesStatus = statusFilter.length === 0 || statusFilter.includes(ticket.status);
+    
+    // Date range filter - now using service date (work_start_date)
+    let matchesDateRange = true;
+    if (dateRange.startDate || dateRange.endDate) {
+      const serviceDate = ticket.work_start_date ? new Date(ticket.work_start_date) : null;
+      const startDate = dateRange.startDate ? new Date(dateRange.startDate) : null;
+      const endDate = dateRange.endDate ? new Date(dateRange.endDate + 'T23:59:59') : null; // Include end date
+      
+      if (serviceDate) {
+        if (startDate && serviceDate < startDate) {
+          matchesDateRange = false;
+        }
+        if (endDate && serviceDate > endDate) {
+          matchesDateRange = false;
+        }
+      } else {
+        // If no service date, exclude from results when date filter is active
+        matchesDateRange = false;
+      }
+    }
+    
+    return matchesSearch && matchesStatus && matchesDateRange;
   });
 
-
+  // Calculate filtered stats based on current table data
+  const filteredStats = {
+    total: filteredTickets.length,
+    draft: filteredTickets.filter(t => t.status === 'draft').length,
+    submitted: filteredTickets.filter(t => t.status === 'submitted').length,
+    approved: filteredTickets.filter(t => t.status === 'approved_not_paid' || t.status === 'approved_paid').length,
+    declined: filteredTickets.filter(t => t.status === 'declined').length,
+    info_requested: filteredTickets.filter(t => t.status === 'additional_info_requested').length,
+    totalAmount: filteredTickets.reduce((sum, t) => sum + (Number(t.total_amount) || 0), 0),
+  };
 
   const isAdmin = userRole === 'admin';
 
@@ -242,7 +281,10 @@ const Dashboard = () => {
               <FileText className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-2xl font-bold">{filteredStats.total}</div>
+              <p className="text-xs text-muted-foreground">
+                ${filteredStats.totalAmount.toFixed(2)} billed
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -251,7 +293,10 @@ const Dashboard = () => {
               <FileText className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.draft}</div>
+              <div className="text-2xl font-bold">{filteredStats.draft}</div>
+              <p className="text-xs text-muted-foreground">
+                ${filteredTickets.filter(t => t.status === 'draft').reduce((sum, t) => sum + (Number(t.total_amount) || 0), 0).toFixed(2)} billed
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -260,7 +305,10 @@ const Dashboard = () => {
               <Clock className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.submitted}</div>
+              <div className="text-2xl font-bold">{filteredStats.submitted}</div>
+              <p className="text-xs text-muted-foreground">
+                ${filteredTickets.filter(t => t.status === 'submitted').reduce((sum, t) => sum + (Number(t.total_amount) || 0), 0).toFixed(2)} billed
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -269,7 +317,10 @@ const Dashboard = () => {
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.approved}</div>
+              <div className="text-2xl font-bold">{filteredStats.approved}</div>
+              <p className="text-xs text-muted-foreground">
+                ${filteredTickets.filter(t => t.status === 'approved_not_paid' || t.status === 'approved_paid').reduce((sum, t) => sum + (Number(t.total_amount) || 0), 0).toFixed(2)} billed
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -278,7 +329,10 @@ const Dashboard = () => {
               <XCircle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.declined}</div>
+              <div className="text-2xl font-bold">{filteredStats.declined}</div>
+              <p className="text-xs text-muted-foreground">
+                ${filteredTickets.filter(t => t.status === 'declined').reduce((sum, t) => sum + (Number(t.total_amount) || 0), 0).toFixed(2)} billed
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -293,7 +347,7 @@ const Dashboard = () => {
                   {isAdmin ? 'Manage all service tickets' : 'Your work reports and invoices'}
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
                   <Search className="h-4 w-4" />
                   <Input
@@ -303,20 +357,162 @@ const Dashboard = () => {
                     className="w-64"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="submitted">Submitted</SelectItem>
-                    <SelectItem value="additional_info_requested">Info Requested</SelectItem>
-                    <SelectItem value="approved_not_paid">Approved (Unpaid)</SelectItem>
-                    <SelectItem value="approved_paid">Approved (Paid)</SelectItem>
-                    <SelectItem value="declined">Declined</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-40 justify-start">
+                      <span className="truncate">
+                        {statusFilter.length === 0 
+                          ? 'All Status' 
+                          : statusFilter.length === 1 
+                            ? statusFilter[0] 
+                            : `${statusFilter.length} selected`
+                        }
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-0">
+                    <div className="p-2 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="all-status"
+                          checked={statusFilter.length === 0}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setStatusFilter([]);
+                            }
+                          }}
+                        />
+                        <label htmlFor="all-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          All Status
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="draft"
+                          checked={statusFilter.includes('draft')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setStatusFilter(prev => [...prev, 'draft']);
+                            } else {
+                              setStatusFilter(prev => prev.filter(s => s !== 'draft'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="draft" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Draft
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="submitted"
+                          checked={statusFilter.includes('submitted')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setStatusFilter(prev => [...prev, 'submitted']);
+                            } else {
+                              setStatusFilter(prev => prev.filter(s => s !== 'submitted'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="submitted" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Submitted
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="info-requested"
+                          checked={statusFilter.includes('additional_info_requested')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setStatusFilter(prev => [...prev, 'additional_info_requested']);
+                            } else {
+                              setStatusFilter(prev => prev.filter(s => s !== 'additional_info_requested'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="info-requested" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Info Requested
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="approved-unpaid"
+                          checked={statusFilter.includes('approved_not_paid')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setStatusFilter(prev => [...prev, 'approved_not_paid']);
+                            } else {
+                              setStatusFilter(prev => prev.filter(s => s !== 'approved_not_paid'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="approved-unpaid" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Approved (Unpaid)
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="approved-paid"
+                          checked={statusFilter.includes('approved_paid')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setStatusFilter(prev => [...prev, 'approved_paid']);
+                            } else {
+                              setStatusFilter(prev => prev.filter(s => s !== 'approved_paid'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="approved-paid" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Approved (Paid)
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="declined"
+                          checked={statusFilter.includes('declined')}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setStatusFilter(prev => [...prev, 'declined']);
+                            } else {
+                              setStatusFilter(prev => prev.filter(s => s !== 'declined'));
+                            }
+                          }}
+                        />
+                        <label htmlFor="declined" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Declined
+                        </label>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <Input
+                    type="date"
+                    placeholder="Start Date"
+                    value={dateRange.startDate}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="w-40"
+                  />
+                  <span className="text-muted-foreground">to</span>
+                  <Input
+                    type="date"
+                    placeholder="End Date"
+                    value={dateRange.endDate}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="w-40"
+                  />
+                  {(dateRange.startDate || dateRange.endDate) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDateRange({ startDate: '', endDate: '' })}
+                      className="h-8 px-2"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -352,7 +548,7 @@ const Dashboard = () => {
                        <TableHead>{isAdmin ? 'Created By' : 'Description'}</TableHead>
                        <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
-                      <TableHead>Submitted</TableHead>
+                      <TableHead>Service Date</TableHead>
                       <TableHead>Total Amount</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -390,8 +586,8 @@ const Dashboard = () => {
                           {format(new Date(ticket.created_at), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell>
-                          {ticket.status !== 'draft' 
-                            ? format(new Date(ticket.updated_at), 'MMM d, yyyy') 
+                          {ticket.work_start_date 
+                            ? format(new Date(ticket.work_start_date), 'MMM d, yyyy') 
                             : '-'
                           }
                         </TableCell>

@@ -13,12 +13,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Lightbox } from '@/components/ui/lightbox';
 import { format } from 'date-fns';
 import { PhotoUpload } from '@/components/ticket/PhotoUpload';
+import { TimeTracker } from '@/components/ticket/TimeTracker';
 
 interface TicketFormData {
   title: string;
   description: string;
-  work_start_date: string;
-  work_end_date: string;
+  total_amount: number;
+  startTime: string;
+  endTime: string;
+  staff: number;
+  hourlyRate: number;
   before_photos: File[];
   after_photos: File[];
   existing_before_photos: string[];
@@ -43,6 +47,8 @@ const EditTicket = () => {
     description: string;
     work_start_date: string;
     work_end_date: string;
+    total_amount: number;
+    hourly_rate: number;
     before_photos: string[];
     after_photos: string[];
     user_id: string;
@@ -51,8 +57,11 @@ const EditTicket = () => {
   const [formData, setFormData] = useState<TicketFormData>({
     title: '',
     description: '',
-    work_start_date: '',
-    work_end_date: '',
+    total_amount: 0,
+    startTime: '',
+    endTime: '',
+    staff: 1,
+    hourlyRate: 0,
     before_photos: [],
     after_photos: [],
     existing_before_photos: [],
@@ -104,11 +113,18 @@ const EditTicket = () => {
       }
 
       setTicket(data);
+      // Extract time from work dates
+      const startTime = data.work_start_date ? new Date(data.work_start_date).toTimeString().slice(0, 5) : '';
+      const endTime = data.work_end_date ? new Date(data.work_end_date).toTimeString().slice(0, 5) : '';
+      
       setFormData({
         title: data.title || '',
         description: data.description || '',
-        work_start_date: data.work_start_date ? format(new Date(data.work_start_date), 'yyyy-MM-dd') : '',
-        work_end_date: data.work_end_date ? format(new Date(data.work_end_date), 'yyyy-MM-dd') : '',
+        total_amount: data.total_amount || 0,
+        startTime: startTime,
+        endTime: endTime,
+        staff: 1, // Default staff count
+        hourlyRate: data.hourly_rate || 0,
         before_photos: [],
         after_photos: [],
         existing_before_photos: data.before_photos || [],
@@ -155,14 +171,7 @@ const EditTicket = () => {
       return;
     }
 
-    if (!formData.work_start_date || !formData.work_end_date) {
-      toast({
-        title: "Validation Error", 
-        description: "Work start and end dates are required",
-        variant: "destructive"
-      });
-      return;
-    }
+
 
     try {
       setSaving(true);
@@ -183,11 +192,18 @@ const EditTicket = () => {
       const allBeforePhotos = [...formData.existing_before_photos, ...newBeforePhotoUrls];
       const allAfterPhotos = [...formData.existing_after_photos, ...newAfterPhotoUrls];
 
+      // Convert time data to work dates (using today's date as service date)
+      const today = new Date().toISOString().split('T')[0];
+      const work_start_date = formData.startTime ? `${today}T${formData.startTime}:00` : null;
+      const work_end_date = formData.endTime ? `${today}T${formData.endTime}:00` : null;
+
       const updateData = {
         title: formData.title,
         description: formData.description,
-        work_start_date: formData.work_start_date,
-        work_end_date: formData.work_end_date,
+        total_amount: formData.total_amount,
+        work_start_date: work_start_date,
+        work_end_date: work_end_date,
+        hourly_rate: formData.hourlyRate,
         before_photos: allBeforePhotos,
         after_photos: allAfterPhotos,
         status: (shouldSubmit ? 'submitted' : 'draft') as 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined'
@@ -221,7 +237,7 @@ const EditTicket = () => {
     }
   };
 
-  const handleInputChange = (field: keyof TicketFormData, value: string) => {
+  const handleInputChange = (field: keyof TicketFormData, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -316,28 +332,39 @@ const EditTicket = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="work_start_date">Work Start Date *</Label>
-                  <Input
-                    id="work_start_date"
-                    type="date"
-                    value={formData.work_start_date}
-                    onChange={(e) => handleInputChange('work_start_date', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="work_end_date">Work End Date *</Label>
-                  <Input
-                    id="work_end_date"
-                    type="date"
-                    value={formData.work_end_date}
-                    onChange={(e) => handleInputChange('work_end_date', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="total_amount">Total Amount Billed ($)</Label>
+                <Input
+                  id="total_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.total_amount}
+                  onChange={(e) => handleInputChange('total_amount', parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
+                  className="mt-1"
+                />
               </div>
+            </div>
+
+            {/* Time Tracking */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Time Tracking</h3>
+              <TimeTracker
+                startTime={formData.startTime}
+                endTime={formData.endTime}
+                onStartTimeChange={(time) => setFormData(prev => ({ ...prev, startTime: time }))}
+                onEndTimeChange={(time) => setFormData(prev => ({ ...prev, endTime: time }))}
+                staff={formData.staff}
+                onStaffChange={(staff) => setFormData(prev => ({ ...prev, staff }))}
+                hourlyRate={formData.hourlyRate}
+                allowManualHours={true}
+                onHoursChange={(hours) => {
+                  // Update total amount based on hours and hourly rate
+                  const newTotal = hours * formData.hourlyRate;
+                  setFormData(prev => ({ ...prev, total_amount: newTotal }));
+                }}
+              />
             </div>
 
             {/* Existing Photos */}
