@@ -49,12 +49,10 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-    } else {
+    if (user) {
       fetchUserRole();
     }
-  }, [user, navigate]);
+  }, [user]);
 
   // Fetch tickets when userRole changes
   useEffect(() => {
@@ -238,9 +236,7 @@ const Dashboard = () => {
     return matchesSearch && matchesStatus;
   });
 
-  if (!user) {
-    return null;
-  }
+
 
   const isAdmin = userRole === 'admin';
 

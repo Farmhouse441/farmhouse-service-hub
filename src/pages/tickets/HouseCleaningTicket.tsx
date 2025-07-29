@@ -74,10 +74,7 @@ export default function HouseCleaningTicket() {
   const [damagePhotos, setDamagePhotos] = useState<File[]>([]);
   const [checklist, setChecklist] = useState<{ [key: string]: boolean }>({});
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
+
 
   const handleRoomPhotoChange = (room: string, type: 'before' | 'after', photos: File[]) => {
     setRoomPhotos(prev => ({

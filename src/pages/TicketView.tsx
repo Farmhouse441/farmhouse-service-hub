@@ -61,17 +61,14 @@ const TicketView = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    
     if (!id) {
       navigate('/dashboard');
       return;
     }
 
-    fetchUserRole();
+    if (user) {
+      fetchUserRole();
+    }
   }, [user, id, navigate]);
 
   // Fetch ticket when permissions are loaded

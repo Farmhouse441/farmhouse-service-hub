@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Home, Scissors, Snowflake, Plus } from 'lucide-react';
@@ -38,12 +37,6 @@ const templates = [
 
 export default function NewTicket() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-background p-4">

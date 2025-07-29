@@ -46,10 +46,7 @@ export default function LawnCareTicket() {
   const [hazardPhotos, setHazardPhotos] = useState<File[]>([]);
   const [damagePhotos, setDamagePhotos] = useState<File[]>([]);
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
+
 
   const handleYardPhotoChange = (area: string, type: 'before' | 'after', photos: File[]) => {
     setYardPhotos(prev => ({

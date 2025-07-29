@@ -56,18 +56,13 @@ const EditTicket = () => {
   });
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    
     if (!id) {
       navigate('/dashboard');
       return;
     }
 
     // Wait for permissions to load before fetching ticket
-    if (!permissionsLoading) {
+    if (!permissionsLoading && user) {
       fetchTicket();
     }
   }, [user, id, navigate, permissionsLoading]);

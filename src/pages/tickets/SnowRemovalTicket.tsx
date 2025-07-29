@@ -50,10 +50,7 @@ export default function SnowRemovalTicket() {
   const [damagePhotos, setDamagePhotos] = useState<File[]>([]);
   const [checklist, setChecklist] = useState<{ [key: string]: boolean }>({});
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
+
 
   const handleAreaPhotoChange = (area: string, type: 'before' | 'after', photos: File[]) => {
     setAreaPhotos(prev => ({

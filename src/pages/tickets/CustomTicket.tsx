@@ -55,10 +55,7 @@ export default function CustomTicket() {
     return 0;
   };
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
+
 
   const validateForm = () => {
     // Check required fields (notes is now optional)

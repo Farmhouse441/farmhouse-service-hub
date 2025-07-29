@@ -48,12 +48,10 @@ const ManageUsers = () => {
   });
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-    } else {
+    if (user) {
       fetchUserRole();
     }
-  }, [user, navigate]);
+  }, [user]);
 
   useEffect(() => {
     if (userRole === 'admin') {
