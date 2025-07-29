@@ -196,7 +196,62 @@ const TicketView = () => {
     }
   };
 
+  const validateTicketSubmission = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    // Only validate for non-admin users
+    if (userRole === 'admin') {
+      return { isValid: true, errors: [] };
+    }
+    
+    // 1. Check if work end date is in the future
+    if (ticket.work_end_date) {
+      const workEndDate = new Date(ticket.work_end_date);
+      const now = new Date();
+      if (workEndDate > now) {
+        errors.push("Work end date and time cannot be in the future");
+      }
+    }
+    
+    // 2. Check if service date is in the future
+    if (ticket.work_start_date) {
+      const serviceDate = new Date(ticket.work_start_date);
+      const now = new Date();
+      if (serviceDate > now) {
+        errors.push("Service date cannot be in the future");
+      }
+    }
+    
+    // 3. Check photo timestamps (if both before and after photos exist)
+    // Note: This validation requires photo metadata to be stored when photos are uploaded
+    // For now, we'll skip this validation and implement it when photo metadata is available
+    if (ticket.before_photos && ticket.after_photos && 
+        ticket.before_photos.length > 0 && ticket.after_photos.length > 0) {
+      
+      // TODO: Implement photo timestamp validation
+      // This would require:
+      // 1. Extracting EXIF data from photos when uploaded
+      // 2. Storing photo timestamps in the database
+      // 3. Comparing before photo timestamps with after photo timestamps
+      console.log('Photo timestamp validation: Requires photo metadata implementation');
+    }
+    
+    return { isValid: errors.length === 0, errors };
+  };
+
   const handleSubmitTicket = async () => {
+    // Validate before submitting
+    const validation = validateTicketSubmission();
+    
+    if (!validation.isValid) {
+      toast({
+        title: "Validation Error",
+        description: validation.errors.join('\n'),
+        variant: "destructive",
+      });
+      return;
+    }
+    
     await updateTicketStatus('submitted');
   };
 
