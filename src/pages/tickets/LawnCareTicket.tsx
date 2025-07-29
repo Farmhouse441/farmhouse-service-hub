@@ -17,9 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTickets } from '@/hooks/useTickets';
 
 const yardAreas = [
-  'Front Yard',
-  'Back Yard',
-  'Sugar Shack and Orchard',
+  'Mowing or Yard Care Photos',
 ];
 
 export default function LawnCareTicket() {
@@ -229,7 +227,7 @@ export default function LawnCareTicket() {
           {/* Yard Area Photos */}
           <Card>
             <CardHeader>
-              <CardTitle>Yard Documentation</CardTitle>
+              <CardTitle>Yardwork Documentation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
               {yardAreas.map((area) => (

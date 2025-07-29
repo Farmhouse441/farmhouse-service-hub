@@ -15,6 +15,7 @@ interface TimeTrackerProps {
   allowManualHours?: boolean;
   staff: number;
   onStaffChange: (staff: number) => void;
+  hourlyRate?: number;
 }
 
 export function TimeTracker({
@@ -26,7 +27,8 @@ export function TimeTracker({
   onHoursChange,
   allowManualHours = false,
   staff,
-  onStaffChange
+  onStaffChange,
+  hourlyRate
 }: TimeTrackerProps) {
   const [isTracking, setIsTracking] = useState(false);
   const [calculatedHours, setCalculatedHours] = useState(0);
@@ -159,12 +161,24 @@ export function TimeTracker({
             </div>
           ) : (
             <div className="p-3 bg-muted rounded-md">
-              <span className="text-lg font-semibold">
-                {calculatedHours} hours
-              </span>
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-semibold">
+                  {calculatedHours} hours
+                </span>
+                {hourlyRate && (
+                  <span className="text-sm text-muted-foreground">
+                    @ ${hourlyRate.toFixed(2)}/hr
+                  </span>
+                )}
+              </div>
               {startTime && endTime && (
                 <p className="text-sm text-muted-foreground mt-1">
                   From {startTime} to {endTime} ({staff} staff)
+                </p>
+              )}
+              {hourlyRate && calculatedHours > 0 && (
+                <p className="text-sm font-medium text-primary mt-1">
+                  Total: ${(calculatedHours * hourlyRate).toFixed(2)}
                 </p>
               )}
             </div>
