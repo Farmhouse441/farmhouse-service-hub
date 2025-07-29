@@ -46,6 +46,18 @@ const ManageUsers = () => {
     company_name: '',
     address: '',
   });
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [addUserForm, setAddUserForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    company_name: '',
+    address: '',
+    role: 'user' as 'admin' | 'user',
+    password: ''
+  });
+  const [addingUser, setAddingUser] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -266,6 +278,95 @@ const ManageUsers = () => {
     }
   };
 
+  const handleAddUser = async () => {
+    if (!addUserForm.email || !addUserForm.password || !addUserForm.first_name || !addUserForm.last_name) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setAddingUser(true);
+
+      // Create the user account
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: addUserForm.email,
+        password: addUserForm.password,
+        email_confirm: true, // Auto-confirm email
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      if (!authData.user) {
+        throw new Error('Failed to create user account');
+      }
+
+      // Create the user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: authData.user.id,
+          first_name: addUserForm.first_name,
+          last_name: addUserForm.last_name,
+          email: addUserForm.email,
+          phone: addUserForm.phone || null,
+          company_name: addUserForm.company_name || null,
+          address: addUserForm.address || null,
+        });
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      // Assign the user role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: authData.user.id,
+          role: addUserForm.role,
+        });
+
+      if (roleError) {
+        throw roleError;
+      }
+
+      toast({
+        title: "Success",
+        description: `User ${addUserForm.first_name} ${addUserForm.last_name} has been created successfully`,
+      });
+
+      // Reset form and close dialog
+      setAddUserForm({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        company_name: '',
+        address: '',
+        role: 'user',
+        password: ''
+      });
+      setAddUserDialogOpen(false);
+
+      // Refresh the users list
+      fetchUsers();
+    } catch (error) {
+      console.error('Error adding user:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create user",
+        variant: "destructive",
+      });
+    } finally {
+      setAddingUser(false);
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -329,9 +430,15 @@ const ManageUsers = () => {
               Manage user accounts, roles, and permissions
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-muted-foreground" />
-            <span className="text-lg font-semibold">{users.length} Users</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              <span className="text-lg font-semibold">{users.length} Users</span>
+            </div>
+            <Button onClick={() => setAddUserDialogOpen(true)}>
+              <UserCog className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
           </div>
         </div>
 
@@ -546,6 +653,110 @@ const ManageUsers = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Add User Dialog */}
+        <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
+                Create a new user account with profile information and role assignment.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="add-first-name">First Name *</Label>
+                  <Input
+                    id="add-first-name"
+                    value={addUserForm.first_name}
+                    onChange={(e) => setAddUserForm({...addUserForm, first_name: e.target.value})}
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="add-last-name">Last Name *</Label>
+                  <Input
+                    id="add-last-name"
+                    value={addUserForm.last_name}
+                    onChange={(e) => setAddUserForm({...addUserForm, last_name: e.target.value})}
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="add-email">Email *</Label>
+                <Input
+                  id="add-email"
+                  type="email"
+                  value={addUserForm.email}
+                  onChange={(e) => setAddUserForm({...addUserForm, email: e.target.value})}
+                  placeholder="john.doe@example.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-password">Password *</Label>
+                <Input
+                  id="add-password"
+                  type="password"
+                  value={addUserForm.password}
+                  onChange={(e) => setAddUserForm({...addUserForm, password: e.target.value})}
+                  placeholder="Enter password"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-phone">Phone</Label>
+                <Input
+                  id="add-phone"
+                  value={addUserForm.phone}
+                  onChange={(e) => setAddUserForm({...addUserForm, phone: e.target.value})}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-company">Company</Label>
+                <Input
+                  id="add-company"
+                  value={addUserForm.company_name}
+                  onChange={(e) => setAddUserForm({...addUserForm, company_name: e.target.value})}
+                  placeholder="Company Name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-address">Address</Label>
+                <Input
+                  id="add-address"
+                  value={addUserForm.address}
+                  onChange={(e) => setAddUserForm({...addUserForm, address: e.target.value})}
+                  placeholder="123 Main St, City, State"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-role">Role</Label>
+                <Select
+                  value={addUserForm.role}
+                  onValueChange={(value) => setAddUserForm({...addUserForm, role: value as 'admin' | 'user'})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddUserDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddUser} disabled={addingUser}>
+                {addingUser ? 'Creating...' : 'Create User'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
