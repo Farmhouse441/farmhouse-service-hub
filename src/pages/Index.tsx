@@ -4,9 +4,9 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <div className="text-center max-w-3xl">
-        <h1 className="text-5xl font-bold mb-6">Service Provider Portal</h1>
+        <h1 className="text-5xl font-bold mb-6">Farmhouse @ Bridgewater Service Provider Portal</h1>
         <p className="text-xl text-muted-foreground mb-8">
-          Submit work reports and invoices for rental property services with ease
+          Submit work reports and invoices for services provided to the Farmhouse with ease
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button 
