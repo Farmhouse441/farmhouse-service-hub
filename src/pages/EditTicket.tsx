@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Save, Send, Upload, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Lightbox } from '@/components/ui/lightbox';
 import { format } from 'date-fns';
 import { PhotoUpload } from '@/components/ticket/PhotoUpload';
 
@@ -33,6 +34,9 @@ const EditTicket = () => {
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [ticket, setTicket] = useState<{
     id: string;
     title: string;
@@ -245,6 +249,12 @@ const EditTicket = () => {
     return data.publicUrl;
   };
 
+  const openLightbox = (images: string[], startIndex: number) => {
+    setLightboxImages(images);
+    setLightboxIndex(startIndex);
+    setLightboxOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -344,7 +354,8 @@ const EditTicket = () => {
                           <img
                             src={getImageUrl(photo)}
                             alt={`Before photo ${index + 1}`}
-                            className="rounded-lg object-cover aspect-square border"
+                            className="rounded-lg object-cover aspect-square border cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => openLightbox(formData.existing_before_photos.map(getImageUrl), index)}
                           />
                           <Button
                             variant="destructive"
@@ -369,7 +380,8 @@ const EditTicket = () => {
                           <img
                             src={getImageUrl(photo)}
                             alt={`After photo ${index + 1}`}
-                            className="rounded-lg object-cover aspect-square border"
+                            className="rounded-lg object-cover aspect-square border cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => openLightbox(formData.existing_after_photos.map(getImageUrl), index)}
                           />
                           <Button
                             variant="destructive"
@@ -445,6 +457,14 @@ const EditTicket = () => {
           </CardContent>
         </Card>
       </main>
+      
+      {/* Lightbox */}
+      <Lightbox
+        images={lightboxImages}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 };

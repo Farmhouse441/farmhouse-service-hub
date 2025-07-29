@@ -7,10 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, FileText, Clock, CheckCircle, XCircle, Search, Settings, Users, Eye, Edit, Send, Trash2 } from 'lucide-react';
+import { Plus, FileText, Clock, CheckCircle, XCircle, Search, Settings, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTickets } from '@/hooks/useTickets';
@@ -20,8 +18,7 @@ const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { canEditTicket, canDeleteTicket, loading: permissionsLoading } = usePermissions();
-  const { deleteTicket, loading: deleteLoading } = useTickets();
+  const { loading: permissionsLoading } = usePermissions();
   
   const [tickets, setTickets] = useState<Array<{
     id: string;
@@ -29,6 +26,7 @@ const Dashboard = () => {
     description: string;
     status: 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined';
     created_at: string;
+    updated_at: string;
     total_amount: number;
     user_id: string;
     before_photos?: string[];
@@ -130,85 +128,7 @@ const Dashboard = () => {
     }
   };
 
-  const updateTicketStatus = async (ticketId: string, newStatus: 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined') => {
-    try {
-      const { error } = await supabase
-        .from('service_tickets')
-        .update({ status: newStatus })
-        .eq('id', ticketId);
 
-      if (error) {
-        console.error('Error updating ticket status:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update ticket status",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Success",
-        description: `Ticket status updated to ${newStatus}`,
-      });
-
-      fetchTickets(); // Refresh the list
-    } catch (error) {
-      console.error('Error updating ticket status:', error);
-    }
-  };
-
-  const handleSubmitTicket = async (ticketId: string) => {
-    try {
-      const { error } = await supabase
-        .from('service_tickets')
-        .update({ status: 'submitted' })
-        .eq('id', ticketId);
-
-      if (error) {
-        console.error('Error submitting ticket:', error);
-        toast({
-          title: "Error",
-          description: "Failed to submit ticket",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Success",
-        description: "Ticket submitted successfully",
-      });
-
-      fetchTickets(); // Refresh the list
-    } catch (error) {
-      console.error('Error submitting ticket:', error);
-    }
-  };
-
-  const handleDeleteTicket = async (ticket: {
-    id: string;
-    title: string;
-    description: string;
-    status: 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined';
-    created_at: string;
-    total_amount: number;
-    user_id: string;
-    before_photos?: string[];
-    after_photos?: string[];
-    invoice_file?: string | null;
-  }) => {
-    const success = await deleteTicket(ticket.id, {
-      before_photos: ticket.before_photos || [],
-      after_photos: ticket.after_photos || [],
-      invoice_file: ticket.invoice_file,
-      status: ticket.status
-    });
-
-    if (success) {
-      fetchTickets(); // Refresh the list
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -217,16 +137,16 @@ const Dashboard = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { label: 'Draft', variant: 'secondary' as const },
-      submitted: { label: 'Submitted', variant: 'default' as const },
-      additional_info_requested: { label: 'Info Requested', variant: 'outline' as const },
-      approved_not_paid: { label: 'Approved (Unpaid)', variant: 'default' as const },
-      approved_paid: { label: 'Approved (Paid)', variant: 'default' as const },
-      declined: { label: 'Declined', variant: 'destructive' as const },
+      draft: { label: 'Draft', variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' },
+      submitted: { label: 'Submitted', variant: 'outline' as const, className: 'bg-blue-50 text-blue-700 border-blue-300' },
+      additional_info_requested: { label: 'Info Requested', variant: 'outline' as const, className: 'bg-orange-50 text-orange-700 border-orange-300' },
+      approved_not_paid: { label: 'Approved (Unpaid)', variant: 'outline' as const, className: 'bg-yellow-50 text-yellow-700 border-yellow-300' },
+      approved_paid: { label: 'Approved (Paid)', variant: 'outline' as const, className: 'bg-green-50 text-green-700 border-green-300' },
+      declined: { label: 'Declined', variant: 'destructive' as const, className: 'bg-red-50 text-red-700 border-red-300' },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
   };
 
   const filteredTickets = tickets.filter((ticket) => {
@@ -404,15 +324,20 @@ const Dashboard = () => {
                        <TableHead>Description</TableHead>
                        <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
+                      <TableHead>Submitted</TableHead>
                       <TableHead>Total Amount</TableHead>
-                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTickets.map((ticket) => (
+                                        {filteredTickets.map((ticket) => (
                       <TableRow key={ticket.id}>
                          <TableCell className="font-medium">
-                           {ticket.title}
+                           <button
+                             onClick={() => navigate(`/view-ticket/${ticket.id}`)}
+                             className="text-left hover:text-primary hover:underline cursor-pointer"
+                           >
+                             {ticket.title}
+                           </button>
                          </TableCell>
                          <TableCell>{ticket.description || '-'}</TableCell>
                         <TableCell>{getStatusBadge(ticket.status)}</TableCell>
@@ -420,101 +345,13 @@ const Dashboard = () => {
                           {format(new Date(ticket.created_at), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell>
-                          {ticket.total_amount ? `$${Number(ticket.total_amount).toFixed(2)}` : '-'}
+                          {ticket.status !== 'draft' 
+                            ? format(new Date(ticket.updated_at), 'MMM d, yyyy') 
+                            : '-'
+                          }
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="gap-1"
-                              onClick={() => navigate(`/view-ticket/${ticket.id}`)}
-                            >
-                              <Eye className="h-3 w-3" />
-                              View
-                            </Button>
-                            
-                            {/* Edit button - using proper permission system */}
-                            {canEditTicket(ticket) && (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="gap-1"
-                                onClick={() => navigate(`/edit-ticket/${ticket.id}`)}
-                              >
-                                <Edit className="h-3 w-3" />
-                                Edit
-                              </Button>
-                            )}
-                            
-                            {/* Submit button - for draft tickets owned by user */}
-                            {ticket.user_id === user?.id && ticket.status === 'draft' && (
-                              <Button 
-                                size="sm" 
-                                className="gap-1"
-                                onClick={() => handleSubmitTicket(ticket.id)}
-                              >
-                                <Send className="h-3 w-3" />
-                                Submit
-                              </Button>
-                            )}
-                            
-                            {/* Admin status change dropdown */}
-                            {isAdmin && (
-                              <Select
-                                value={ticket.status}
-                                onValueChange={(value) => updateTicketStatus(ticket.id, value as 'draft' | 'submitted' | 'additional_info_requested' | 'approved_not_paid' | 'approved_paid' | 'declined')}
-                              >
-                                <SelectTrigger className="w-28">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="draft">Draft</SelectItem>
-                                  <SelectItem value="submitted">Submitted</SelectItem>
-                                  <SelectItem value="additional_info_requested">Info Requested</SelectItem>
-                                  <SelectItem value="approved_not_paid">Approved (Unpaid)</SelectItem>
-                                  <SelectItem value="approved_paid">Approved (Paid)</SelectItem>
-                                  <SelectItem value="declined">Declined</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                            
-                            {/* Delete button - using proper permission system */}
-                            {canDeleteTicket(ticket) && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="gap-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                    disabled={deleteLoading}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                    Delete
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Ticket</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete "{ticket.title}"? 
-                                      This action cannot be undone and will permanently remove the ticket and all associated files.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteTicket(ticket)}
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                      disabled={deleteLoading}
-                                    >
-                                      {deleteLoading ? 'Deleting...' : 'Delete'}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </div>
+                          {ticket.total_amount ? `$${Number(ticket.total_amount).toFixed(2)}` : '-'}
                         </TableCell>
                       </TableRow>
                     ))}

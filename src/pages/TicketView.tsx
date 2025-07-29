@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTickets } from '@/hooks/useTickets';
 import { format } from 'date-fns';
 import { usePDFReport } from '@/hooks/usePDFReport';
+import { Lightbox } from '@/components/ui/lightbox';
 
 interface TicketData {
   id: string;
@@ -59,6 +60,9 @@ const TicketView = () => {
   const [ticket, setTicket] = useState<TicketData | null>(null);
   const [userRole, setUserRole] = useState<string>('user');
   const [loading, setLoading] = useState(true);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     if (!id) {
@@ -237,16 +241,16 @@ const TicketView = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { label: 'Draft', variant: 'secondary' as const },
-      submitted: { label: 'Submitted', variant: 'default' as const },
-      additional_info_requested: { label: 'Info Requested', variant: 'outline' as const },
-      approved_not_paid: { label: 'Approved (Unpaid)', variant: 'default' as const },
-      approved_paid: { label: 'Approved (Paid)', variant: 'default' as const },
-      declined: { label: 'Declined', variant: 'destructive' as const },
+      draft: { label: 'Draft', variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800 border-gray-300' },
+      submitted: { label: 'Submitted', variant: 'outline' as const, className: 'bg-blue-50 text-blue-700 border-blue-300' },
+      additional_info_requested: { label: 'Info Requested', variant: 'outline' as const, className: 'bg-orange-50 text-orange-700 border-orange-300' },
+      approved_not_paid: { label: 'Approved (Unpaid)', variant: 'outline' as const, className: 'bg-yellow-50 text-yellow-700 border-yellow-300' },
+      approved_paid: { label: 'Approved (Paid)', variant: 'outline' as const, className: 'bg-green-50 text-green-700 border-green-300' },
+      declined: { label: 'Declined', variant: 'destructive' as const, className: 'bg-red-50 text-red-700 border-red-300' },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
   };
 
   const getImageUrl = (path: string) => {
@@ -254,6 +258,12 @@ const TicketView = () => {
       .from('ticket-photos')
       .getPublicUrl(path);
     return data.publicUrl;
+  };
+
+  const openLightbox = (images: string[], startIndex: number) => {
+    setLightboxImages(images);
+    setLightboxIndex(startIndex);
+    setLightboxOpen(true);
   };
 
   if (loading) {
@@ -282,7 +292,6 @@ const TicketView = () => {
   const isAdmin = userRole === 'admin';
   const lineItemsTotal = ticket.line_items?.reduce((sum, item) => sum + Number(item.total_amount || 0), 0) || 0;
   const canEdit = canEditTicket(ticket);
-  const canSubmit = ticket.user_id === user?.id && ticket.status === 'draft';
 
   return (
     <div className="min-h-screen bg-background">
@@ -303,18 +312,26 @@ const TicketView = () => {
                 <Download className="h-4 w-4" />
                 Download PDF
               </Button>
-              {canSubmit && (
+              
+              {/* Submit button - for draft and info requested tickets owned by user */}
+              {(ticket.user_id === user?.id && (ticket.status === 'draft' || ticket.status === 'additional_info_requested')) && (
                 <Button onClick={handleSubmitTicket} className="gap-2">
                   <Send className="h-4 w-4" />
                   Submit Ticket
                 </Button>
               )}
+              
+              {/* Edit button */}
               {canEdit && (
                 <Button variant="outline" onClick={handleEditTicket} className="gap-2">
                   <Edit className="h-4 w-4" />
                   Edit Ticket
                 </Button>
               )}
+              
+
+              
+              {/* Delete button */}
               {canDeleteTicket(ticket) && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -348,6 +365,7 @@ const TicketView = () => {
                   </AlertDialogContent>
                 </AlertDialog>
               )}
+              
               {getStatusBadge(ticket.status)}
             </div>
           </div>
@@ -511,7 +529,8 @@ const TicketView = () => {
                             key={index}
                             src={getImageUrl(photo)}
                             alt={`Before photo ${index + 1}`}
-                            className="rounded-lg object-cover aspect-square border"
+                            className="rounded-lg object-cover aspect-square border cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => openLightbox(ticket.before_photos.map(getImageUrl), index)}
                           />
                         ))}
                       </div>
@@ -527,7 +546,8 @@ const TicketView = () => {
                             key={index}
                             src={getImageUrl(photo)}
                             alt={`After photo ${index + 1}`}
-                            className="rounded-lg object-cover aspect-square border"
+                            className="rounded-lg object-cover aspect-square border cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => openLightbox(ticket.after_photos.map(getImageUrl), index)}
                           />
                         ))}
                       </div>
@@ -612,6 +632,14 @@ const TicketView = () => {
           </div>
         </div>
       </main>
+      
+      {/* Lightbox */}
+      <Lightbox
+        images={lightboxImages}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 };
