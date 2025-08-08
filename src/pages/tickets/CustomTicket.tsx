@@ -68,11 +68,11 @@ export default function CustomTicket() {
       return false;
     }
 
-    // Check photos
-    if (!beforePhotos.length || !afterPhotos.length) {
+    // Check photos (before photos optional)
+    if (!afterPhotos.length) {
       toast({
         title: "Missing photos",
-        description: "Please add both before and after photos.",
+        description: "Please add after photos.",
         variant: "destructive"
       });
       return false;
@@ -225,7 +225,6 @@ export default function CustomTicket() {
             <CardContent className="space-y-6">
               <PhotoUpload
                 label="Before Photos"
-                required
                 photos={beforePhotos}
                 onPhotosChange={setBeforePhotos}
                 maxPhotos={15}

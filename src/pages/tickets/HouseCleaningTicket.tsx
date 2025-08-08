@@ -111,13 +111,13 @@ export default function HouseCleaningTicket() {
       return false;
     }
 
-    // Check room photos
+    // Check room photos (before photos optional)
     for (const room of rooms) {
       const photos = roomPhotos[room];
-      if (!photos?.before?.length || !photos?.after?.length) {
+      if (!photos?.after?.length) {
         toast({
           title: "Missing room photos",
-          description: `Please add before and after photos for ${room}.`,
+          description: `Please add after photos for ${room}.`,
           variant: "destructive"
         });
         return false;
@@ -309,7 +309,6 @@ export default function HouseCleaningTicket() {
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <PhotoUpload
                        label="Before Photos"
-                       required
                        photos={roomPhotos[room]?.before || []}
                        onPhotosChange={(photos) => handleRoomPhotoChange(room, 'before', photos)}
                        maxPhotos={5}
@@ -333,16 +332,16 @@ export default function HouseCleaningTicket() {
               <CardTitle>Appliance Documentation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {mandatoryPhotos.map((category) => (
-                <PhotoUpload
-                  key={category}
-                  label={category}
-                  required
-                  photos={mandatoryPhotoFiles[category] || []}
-                  onPhotosChange={(photos) => handleMandatoryPhotoChange(category, photos)}
-                  maxPhotos={3}
-                />
-              ))}
+               {mandatoryPhotos.map((category) => (
+                 <PhotoUpload
+                   key={category}
+                   label={category}
+                   required
+                   photos={mandatoryPhotoFiles[category] || []}
+                   onPhotosChange={(photos) => handleMandatoryPhotoChange(category, photos)}
+                   maxPhotos={3}
+                 />
+               ))}
             </CardContent>
           </Card>
 

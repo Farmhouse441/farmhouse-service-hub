@@ -222,18 +222,16 @@ const TicketView = () => {
       }
     }
     
-    // 3. Check photo timestamps (if both before and after photos exist)
+    // 3. Check photo timestamps (only for post-work/after photos)
     // Note: This validation requires photo metadata to be stored when photos are uploaded
     // For now, we'll skip this validation and implement it when photo metadata is available
-    if (ticket.before_photos && ticket.after_photos && 
-        ticket.before_photos.length > 0 && ticket.after_photos.length > 0) {
-      
-      // TODO: Implement photo timestamp validation
+    if (ticket.after_photos && ticket.after_photos.length > 0) {
+      // TODO: Implement after photo timestamp validation only
       // This would require:
       // 1. Extracting EXIF data from photos when uploaded
       // 2. Storing photo timestamps in the database
-      // 3. Comparing before photo timestamps with after photo timestamps
-      console.log('Photo timestamp validation: Requires photo metadata implementation');
+      // 3. Validating that after photo timestamps align with reported work times
+      console.log('After photo timestamp validation: Requires photo metadata implementation');
     }
     
     return { isValid: errors.length === 0, errors };

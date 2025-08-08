@@ -80,13 +80,13 @@ export default function SnowRemovalTicket() {
       return false;
     }
 
-    // Check area photos
+    // Check area photos (before photos optional)
     for (const area of clearingAreas) {
       const photos = areaPhotos[area];
-      if (!photos?.before?.length || !photos?.after?.length) {
+      if (!photos?.after?.length) {
         toast({
           title: "Missing area photos",
-          description: `Please add before and after photos for ${area}.`,
+          description: `Please add after photos for ${area}.`,
           variant: "destructive"
         });
         return false;
@@ -247,7 +247,6 @@ export default function SnowRemovalTicket() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <PhotoUpload
                       label="Before Photos"
-                      required
                       photos={areaPhotos[area]?.before || []}
                       onPhotosChange={(photos) => handleAreaPhotoChange(area, 'before', photos)}
                       maxPhotos={5}

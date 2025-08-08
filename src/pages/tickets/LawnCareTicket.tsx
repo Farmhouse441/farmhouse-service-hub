@@ -67,13 +67,13 @@ export default function LawnCareTicket() {
       return false;
     }
 
-    // Check yard photos
+    // Check yard photos (before photos optional)
     for (const area of yardAreas) {
       const photos = yardPhotos[area];
-      if (!photos?.before?.length || !photos?.after?.length) {
+      if (!photos?.after?.length) {
         toast({
           title: "Missing yard photos",
-          description: `Please add before and after photos for ${area}.`,
+          description: `Please add after photos for ${area}.`,
           variant: "destructive"
         });
         return false;
@@ -236,7 +236,6 @@ export default function LawnCareTicket() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <PhotoUpload
                       label="Before Photos"
-                      required
                       photos={yardPhotos[area]?.before || []}
                       onPhotosChange={(photos) => handleYardPhotoChange(area, 'before', photos)}
                       maxPhotos={5}
